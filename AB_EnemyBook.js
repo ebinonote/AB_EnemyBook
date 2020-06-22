@@ -1,6 +1,6 @@
 ﻿// =============================================================================
 // AB_EnemyBook.js
-// Version: 1.13
+// Version: 1.14
 // -----------------------------------------------------------------------------
 // [Homepage]: ヱビのノート
 //             http://www.zf.em-net.ne.jp/~ebi-games/
@@ -8,7 +8,7 @@
 
 
 /*:
- * @plugindesc v1.13 戦闘中も確認できるモンスター図鑑です。属性、ステートの耐性の確認もできます。
+ * @plugindesc v1.14 戦闘中も確認できるモンスター図鑑です。属性、ステートの耐性の確認もできます。
  * @author ヱビ
  * 
  * @param ShowCommandInBattle
@@ -327,6 +327,10 @@
  * ============================================================================
  * 更新履歴
  * ============================================================================
+ * 
+ * Version 1.14
+ *   YEP_X_AnimatedSVEnemiesを入れてもアニメーションしていなかった不具合を直し
+ *   ました。残っていたコンソールログを削除しました。
  * 
  * Version 1.13
  *   YEP_X_AnimatedSVEnemiesを使っている場合、アニメーションするようにしまし
@@ -1053,7 +1057,7 @@
 		this.isCheck = false;
 		this.refresh();
 		// this._cw = 0;
-		this._spriteFrameCount = 0;
+		this._spriteFrameCountAB = 0;
 	};
 
 	Window_EnemyBookStatus.prototype.setup = function() {
@@ -1086,11 +1090,11 @@
 			// ver 1.13
 			if (Imported.YEP_X_AnimatedSVEnemies) {
 				var bitmap = this._enemySprite.bitmap;
-				if (this._spriteFrameCount % 12 === 0) {
+				if (this._spriteFrameCountAB % 12 === 0) {
 					if (dataEnemy.sideviewBattler[0]) {
 						var ary = [0,1,2,1];
 						var motionIndex = 0; // 待機モーション
-						var pattern = ary[Math.floor(this._spriteFrameCount / 12) % 4];
+						var pattern = ary[Math.floor(this._spriteFrameCountAB / 12) % 4];
 						var cw = bitmap.width / 9;
 						var ch = bitmap.height / 6;
 						var cx = Math.floor(motionIndex / 6) * 3 + pattern;
@@ -1100,7 +1104,6 @@
 						// これはBitmapを新しく作っている。（？）
 						// サイドビューバトラーの高さと幅を指定していた場合調整される。
 						// this._enemySprite.bitmap = new Bitmap(cw, ch);
-
 					// サイドビューバトラーじゃない場合
 					} else {
 						// 1回目に表示されるようになったけどはみ出す
@@ -1121,13 +1124,13 @@
 			//
 			//console.log(this._enemySprite.bitmap.width);
 			//console.log(contentsWidth);
-			console.log("bitmapWidth:"+bitmapWidth+"(contentsWidth / 2):" +contentsWidth / 2);
 			if (bitmapWidth > contentsWidth / 2) {
 				scale = contentsWidth / bitmapWidth / 2;
 				//console.log("bitmapWidth(+"bitmapWidth"+) > contentsWidth / 2");
 			}
 			this._enemySprite.scale.x = scale;
 			this._enemySprite.scale.y = scale;
+			this._spriteFrameCountAB++;
 		}
 	};
 
