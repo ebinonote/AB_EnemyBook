@@ -1,6 +1,6 @@
 ﻿// =============================================================================
 // AB_EnemyBook.js
-// Version: 1.22
+// Version: 1.23
 // -----------------------------------------------------------------------------
 // [Homepage]: ヱビのノート
 //             http://www.zf.em-net.ne.jp/~ebi-games/
@@ -9,7 +9,7 @@
 
 
 /*:
- * @plugindesc v1.22 戦闘中も確認できるモンスター図鑑です。属性、ステートの耐性の確認もできます。
+ * @plugindesc v1.23 戦闘中も確認できるモンスター図鑑です。属性、ステートの耐性の確認もできます。
  * @author ヱビ
  * 
  * @param ShowCommandInBattle
@@ -548,6 +548,10 @@
  * 更新履歴
  * ============================================================================
  * 
+ * Version 1.23
+ *   未登録のモンスターをチェックしようとするとエラーが発生してしまう不具合を修
+ *   正しました。
+ * 
  * Version 1.22
  *   ドロップしていないアイテムを？？？と表示する機能を追加しました。
  *   ドロップアイテムを入手したかどうかをリセットするプラグインコマンドを追加し
@@ -681,6 +685,7 @@
 	var Achievement = String(parameters['Achievement'] || "");
 	var UnknownEnemy = String(parameters['UnknownEnemy'] || "");
 	var UnknownData = String(parameters['UnknownData'] || "");
+	var HideUnknownStatusInSkill = (parameters['HideUnknownStatusInSkill'] == 1) ? true : false;
 	var HideItemUntilGet = (parameters['HideItemUntilGet'] == 1) ? true : false;
 	var ShowCommandInBattle = (parameters['ShowCommandInBattle'] == 1) ? true : false;
 	var AddEnemySkillMessage = String(parameters['AddEnemySkillMessage'] || "");
@@ -689,6 +694,12 @@
 	var FailToCheckEnemySkillMessage = String(parameters['FailToCheckEnemySkillMessage'] || "");
 	var DispNo = (parameters['DispNo'] == 1) ? true : false;
 	var DispLv = (parameters['DispLv'] == 1) ? true : false;
+	var ShowCurrentStatus = (parameters['ShowCurrentStatus'] == 1) ? true : false;
+	var DispDescribe = (parameters['DispDescribe'] == 1) ? true : false;
+
+	var DispDefeatNumber = (parameters['DispDefeatNumber'] == 1) ? true : false;
+
+	var UseElementIconInPluginParameter = (parameters['UseElementIconInPluginParameter'] == 1) ? true : false;
 	var dispParameters = [];
 	dispParameters[0] = (parameters['DispHP'] == 1) ? true : false;
 	dispParameters[1] = (parameters['DispMP'] == 1) ? true : false;
@@ -712,13 +723,7 @@
 	var NoEffectStateName = String(parameters['NoEffectStateName'] || "無効ステート");
 	var UnknownDropItemIcon = Number(parameters['UnknownDropItemIcon']);
 	if (UnknownDropItemIcon === Number.NaN) UnknownDropItemIcon = 0;
-	var ShowCurrentStatus = (parameters['ShowCurrentStatus'] == 1) ? true : false;
-	var DispDescribe = (parameters['DispDescribe'] == 1) ? true : false;
-
-	var DispDefeatNumber = (parameters['DispDefeatNumber'] == 1) ? true : false;
 	var DefeatNumberName = String(parameters['DefeatNumberName'] || "倒した数");
-
-	var UseElementIconInPluginParameter = (parameters['UseElementIconInPluginParameter'] == 1) ? true : false;
 	var ElementIcons = (parameters['ElementIcons']).split(" ");
 	var a = [0];
 	ElementIcons = a.concat(ElementIcons);
