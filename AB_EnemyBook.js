@@ -1,28 +1,55 @@
 ﻿// =============================================================================
 // AB_EnemyBook.js
-// Version: 1.16
+// Version: 1.17
 // -----------------------------------------------------------------------------
 // [Homepage]: ヱビのノート
 //             http://www.zf.em-net.ne.jp/~ebi-games/
 // =============================================================================
 
 
+
 /*:
- * @plugindesc v1.16 戦闘中も確認できるモンスター図鑑です。属性、ステートの耐性の確認もできます。
+ * @plugindesc v1.17 戦闘中も確認できるモンスター図鑑です。属性、ステートの耐性の確認もできます。
  * @author ヱビ
  * 
  * @param ShowCommandInBattle
+ * @type select
+ * @option 表示
+ * @value 1
+ * @option 非表示
+ * @value 0
+ * @desc バトル中に図鑑を見るコマンドを表示するかどうかを決めます。
+ * プラグインコマンドで変更することもできます。0:非表示、1:表示
+ * @default 1
+ * 
+ * @param ShowAllBookCommandInBattle
+ * @type select
+ * @option 表示
+ * @value 1
+ * @option 非表示
+ * @value 0
  * @desc バトル中に図鑑を見るコマンドを表示するかどうかを決めます。
  * プラグインコマンドで変更することもできます。0:非表示、1:表示
  * @default 1
  * 
  * @param ResisterTiming
+ * @type select
+ * @option 登録されない
+ * @value 0
+ * @option 戦闘開始時
+ * @value 1
+ * @option 戦闘終了時
+ * @value 2
  * @desc 図鑑に登録されるタイミングです。
  * 0:登録されない、1:戦闘開始時、2:戦闘終了時
  * @default 2
  * 
  * @param ShowCurrentStatus
- * @type boolean
+ * @type select
+ * @option ON
+ * @value 1
+ * @option OFF
+ * @value 0
  * @desc ONにすると、図鑑で敵の現在の情報（現在HPなど）が見られます。
  * プラグインコマンドで変更することもできます。0:OFF、1:ON
  * @default 0
@@ -33,6 +60,10 @@
  * @param EnemyBookCommandName
  * @desc バトル中の敵の情報を見るコマンドの名前です。
  * @default 敵の情報
+ * 
+ * @param EnemyBookAllCommandName
+ * @desc バトル中、通常通り図鑑を開くコマンドの名前です。
+ * @default 図鑑
  * 
  * @param Achievement
  * @desc 達成率の名前です。
@@ -71,6 +102,8 @@
  * @default 倒した数
  * 
  * @param UnknownDropItemIcon
+ * @type number
+ * @min 0
  * @desc 未知の敵キャラの落とすアイテムのアイコンの番号です。
  * デフォルト：16
  * @default 16
@@ -94,78 +127,168 @@
  * @default 
  * 
  * @param DispNo
+ * @type select
+ * @option 表示
+ * @value 1
+ * @option 非表示
+ * @value 0
  * @desc 図鑑に番号を表示するか決めます。0:非表示、1:表示
  * @default 1
  * 
  * @param DispLv
+ * @type select
+ * @option 表示
+ * @value 1
+ * @option 非表示
+ * @value 0
  * @desc 図鑑にレベルを表示するか決めます。0:非表示、1:表示
  * @default 1
  * 
  * @param DispDefeatNumber
+ * @type select
+ * @option 表示
+ * @value 1
+ * @option 非表示
+ * @value 0
  * @desc 図鑑にその敵を倒した数を表示するか決めます。
  * 0:非表示、1:表示
  * @default 1
  * 
  * @param DispHP
+ * @type select
+ * @option 表示
+ * @value 1
+ * @option 非表示
+ * @value 0
  * @desc 図鑑にHPを表示するか決めます。0:非表示、1:表示
  * @default 1
  * 
  * @param DispMP
+ * @type select
+ * @option 表示
+ * @value 1
+ * @option 非表示
+ * @value 0
  * @desc 図鑑にMPを表示するか決めます。0:非表示、1:表示
  * @default 1
  * 
  * @param DispATK
+ * @type select
+ * @option 表示
+ * @value 1
+ * @option 非表示
+ * @value 0
  * @desc 図鑑に攻撃力を表示するか決めます。0:非表示、1:表示
  * @default 1
  * 
  * @param DispDEF
+ * @type select
+ * @option 表示
+ * @value 1
+ * @option 非表示
+ * @value 0
  * @desc 図鑑に防御力を表示するか決めます。0:非表示、1:表示
  * @default 1
  * 
  * @param DispMAT
+ * @type select
+ * @option 表示
+ * @value 1
+ * @option 非表示
+ * @value 0
  * @desc 図鑑に魔法力を表示するか決めます。0:非表示、1:表示
  * @default 1
  * 
  * @param DispMDF
+ * @type select
+ * @option 表示
+ * @value 1
+ * @option 非表示
+ * @value 0
  * @desc 図鑑に魔法防御を表示するか決めます。0:非表示、1:表示
  * @default 1
  * 
  * @param DispAGI
+ * @type select
+ * @option 表示
+ * @value 1
+ * @option 非表示
+ * @value 0
  * @desc 図鑑に敏捷性を表示するか決めます。0:非表示、1:表示
  * @default 1
  * 
  * @param DispLUK
+ * @type select
+ * @option 表示
+ * @value 1
+ * @option 非表示
+ * @value 0
  * @desc 図鑑に運を表示するか決めます。0:非表示、1:表示
  * @default 1
  * 
  * @param DispDropItems
+ * @type select
+ * @option 表示
+ * @value 1
+ * @option 非表示
+ * @value 0
  * @desc 図鑑にドロップアイテムを表示するか決めます。0:非表示、1:表示
  * @default 1
  * 
  * @param DispWeakElement
+ * @type select
+ * @option 表示
+ * @value 1
+ * @option 非表示
+ * @value 0
  * @desc 図鑑に効きやすい属性を表示するか決めます。0:非表示、1:表示
  * @default 1
  * 
  * @param DispResistElement
+ * @type select
+ * @option 表示
+ * @value 1
+ * @option 非表示
+ * @value 0
  * @desc 図鑑に効きにくい属性を表示するか決めます。0:非表示、1:表示
  * @default 1
  * 
  * @param DispWeakState
+ * @type select
+ * @option 表示
+ * @value 1
+ * @option 非表示
+ * @value 0
  * @desc 図鑑に効きやすいステートを表示するか決めます。
  * 0:非表示、1:表示
  * @default 1
  * 
  * @param DispResistState
+ * @type select
+ * @option 表示
+ * @value 1
+ * @option 非表示
+ * @value 0
  * @desc 図鑑に効きにくいステートを表示するか決めます。（無効含む）
  * 0:非表示、1:表示
  * @default 1
  * 
  * @param DispNoEffectState
+ * @type select
+ * @option 表示
+ * @value 1
+ * @option 非表示
+ * @value 0
  * @desc 図鑑に効かないステートを表示するか決めます。
  * 0:非表示、1:表示
  * @default 0
  * 
  * @param DispDescribe
+ * @type select
+ * @option 表示
+ * @value 1
+ * @option 非表示
+ * @value 0
  * @desc 図鑑に敵キャラの説明を表示するか決めます。
  * 0:非表示、1:表示
  * @default 1
@@ -174,9 +297,14 @@
  * @default 
  * 
  * @param UseElementIconInPluginParameter
+ * @type select
+ * @option ON
+ * @value 1
+ * @option OFF
+ * @value 0
  * @desc 属性の中のアイコンではなく、下のパラメータを使いますか？
  * 0:OFF、1:ON
- * @default 0
+ * @default 1
  * 
  * @param ElementIcons
  * @desc 属性のアイコンです。1番から順番に半角スペースで区切って並
@@ -185,54 +313,94 @@
  * 
  * @help
  * ============================================================================
- * どんなプラグイン？
+ * 概要
  * ============================================================================
  * 
- * 戦闘中も確認できるモンスター図鑑が作れます。
- * Yoji Ojima 氏のプラグイン「EnemyBook.js」を改変しました。
+ * RPGツクールデフォルトでついてくる、Yoji Ojima 様のプラグイン「EnemyBook.js」
+ * の改変プラグイン
  * 
- * ============================================================================
- * 表示されるもの
- * ============================================================================
+ * 〇できること
  * 
- * 図鑑で表示できるものは以下です。プラグインパラメータで表示するかしないかを設
- * 定できます。
- * ・敵の番号
- * ・レベル（メモ欄）
- * ・その敵を倒した数
+ * ・モンスター図鑑を開ける
+ * ・EnemyBook.jsではなかった項目も見られる
+ * ・戦闘中に図鑑を見られるコマンドを追加可能
+ * ・敵の情報を見るチェックスキルを作れる
+ * 
+ * 〇表示できるもの（★はEnemyBook.jsにはなかった項目）
+ * 
+ * ・敵の名前
+ * ・敵のイラスト
+ * ★敵の番号
+ * ★レベル（メモ欄で設定）
+ * ★その敵を倒した数
  * ・HP、MP、攻撃力、防御力、魔法力、魔法防御、敏捷性、運
  * ・ドロップアイテム
- * ・効きやすい属性、効きにくい属性
- * ・効きやすいステート、効きにくい（無効含む）ステート、効かないステート
- * ・説明文（メモ欄）
+ * ★効きやすい属性、効きにくい属性
+ * ★効きやすいステート、効きにくい（無効含む）ステート、効かないステート
+ * ・説明文（メモ欄で設定、2行）
+ * ★図鑑の達成率
  * 
- * 属性を表示するときは、2通りの方法があります。
+ * ============================================================================
+ * 4つの使い方
+ * ============================================================================
+ * 
+ * １．図鑑
+ * 表示：図鑑に登録されているすべての敵のリスト
+ * 操作：アイテムを使ったり、人に話しかけたり、戦闘中に「図鑑」コマンド
+ * 
+ * ２．バトル中の敵のステータス一覧
+ * 表示：バトル中の敵のリスト。HPゲージなど、現在のステータス
+ * 操作：戦闘中に「敵の情報」コマンド。現在の情報を見る設定がONになっているとき
+ * 
+ * ３．バトル中の敵の図鑑の情報
+ * 表示：バトル中の敵のリスト。現在のステータスではなく、図鑑の情報
+ * 操作：戦闘中に「敵の情報」コマンド。現在の情報を見る設定がOFFになっているとき
+ * 
+ * ４．チェック
+ * 表示：チェックした敵の現在のステータス
+ * 操作：チェックスキルを敵に対して使用
+ * 
+ * ============================================================================
+ * とりあえずの導入方法
+ * ============================================================================
+ * 
+ * このプラグインをプラグインマネージャーで読み込んで、
+ * 図鑑を表示するイベントにプラグインコマンド「EnemyBook open」を加えるだけ！
+ * 
+ * データベースの敵キャラは、名前が空白でなければ図鑑に登録されていきます。
+ * （名前があっても図鑑に登録したくない敵キャラには、設定が必要です）
+ * 
+ * ただ、そのままでは表示する項目が多すぎて表示しきれていないので、プラグイン
+ * パラメータで表示する項目を削りましょう。
+ * 
+ * ============================================================================
+ * その他
+ * ============================================================================
+ * 
+ * 〇属性の表示方法、2通り
  * 
  * 1.属性の名前の中にアイコンを入れる
  *   例：\i[64]炎
  * 
- * 2.プラグインパラメータを使う
- *   version1.04で追加しました。
+ * 2.プラグインパラメータを使う - v1.04
  *   UseElementIconInPluginParameterをONにし、
  *   ElementIconsに属性アイコンの番号を半角スペースで区切って並べてください。
+ *   例：76 64 65 66 67 68 69 70 71
+ * 
+ * 〇未確認の敵キャラ「？？？」
  * 
  * まだ図鑑に登録されていない敵との戦闘中に図鑑を開くと、データが「？？？」と
  * 表示されます。「？？？」の部分はプラグインパラメータの UnknownDataで設定
  * できます。 
  * 
- * プラグインパラメータ ShowCurrentStatus を ON にすると、
+ * 〇現在の情報を見る設定
+ * 
+ * プラグインパラメータShowCurrentStatus を ON にすると、
  * 戦闘中に図鑑を開いたとき、現在の敵キャラのパラメータが表示されます。
- * 現在HPだけでなく、攻撃力や属性有効度も変化していると現在の値が表示されます。
- * これは後述のプラグインコマンドで変更できます。
+ * 現在HPだけでなく、攻撃力や属性有効度の変化も表示されます。
+ * 現在の情報を見る設定は、プラグインコマンドで変更できます。
  * 
- * 他にも、後述の目安となるレベルを敵キャラのメモ欄で設定した場合、表示されます。
- * 
- * Version 1.02からは全ての項目を表示すると画面をはみ出してしまうので、
- * プラグインパラメータでどの項目を表示するか設定してください。
- * 
- * ============================================================================
- * 図鑑に登録されるタイミング
- * ============================================================================
+ * 〇図鑑に登録されるタイミング
  * 
  * プラグインパラメータ ResisterTiming で、図鑑に登録されるタイミングを設定でき
  * ます。
@@ -242,41 +410,34 @@
  * 2: 戦闘終了時
  * 
  * ============================================================================
- * EnemyBook.jsと同じコマンド
+ * プラグインコマンド
  * ============================================================================
  * 
- * プラグインコマンド：
- *   EnemyBook open 
- *     図鑑画面を開きます。
- *   EnemyBook add 3
- *     敵キャラ３番を図鑑に追加します。
- *   EnemyBook remove 4
- *     敵キャラ４番を図鑑から削除します。
- *   EnemyBook complete
- *     図鑑を完成させます。
- *   EnemyBook clear
- *     図鑑をクリアします。
+ * 〇EnemyBook.jsと同じコマンド
  * 
- * 敵キャラのメモ:
- *   <desc1:なんとか>
- *     説明１行目です。
- *   <desc2:かんとか>
- *     説明２行目です。
- *   <book:no>
- *     これを設定した敵キャラは図鑑に載りません。
+ * EnemyBook open 
+ *   図鑑画面を開きます。
+ * EnemyBook add 3
+ *   敵キャラ３番を図鑑に追加します。
+ * EnemyBook remove 4
+ *   敵キャラ４番を図鑑から削除します。
+ * EnemyBook complete
+ *   図鑑を完成させます。
+ * EnemyBook clear
+ *   図鑑をクリアします。
  * 
- * ============================================================================
- * その他のプラグインコマンド
- * ============================================================================
+ * 〇その他のプラグインコマンド
  * 
  * EnemyBook showInBattle
- *   戦闘中に図鑑を開くことができるようにします。
+ *   戦闘中に「敵の情報」を開くことができるようにします。
  * EnemyBook hideInBattle
- *   戦闘中に図鑑を開くことができないようにします。
+ *   戦闘中に「敵の情報」を開くことができないようにします。
  * EnemyBook showCurrentStatus
- *   戦闘中に図鑑を開くと、現在の敵のパラメータを見られるようにします。
+ *   戦闘中に「敵の情報」を開くと、現在の敵のパラメータを見られるようにします。
  * EnemyBook showGeneralStatus
- *   戦闘中に図鑑を開くと、その敵の一般的な情報を見られるようにします。
+ *   戦闘中に「敵の情報」を開くと、その敵の一般的な情報を見られるようにします。
+ * 
+ * 〇v1.06
  * 
  * EnemyBook getAchievement per 12
  *   図鑑の達成率（％）を変数12番に入れます。
@@ -287,50 +448,77 @@
  * EnemyBook getDefeatNumber 3 24
  *   敵キャラ3番を倒した数を変数24に入れます。
  * 
- * v1.16
+ * 〇v1.16
  * EnemyBook openEnemy 16
  *   ID16の敵キャラの画面を開きます。
  * 
- * ============================================================================
- * 図鑑に関するスキル
- * ============================================================================
- * 
- * スキルのメモ：
- *   <addToEnemyBook>
- *     対象を図鑑に登録します。
- *     対象が図鑑に載る敵キャラだった場合は成功メッセージが、
- *     そうでなかった場合失敗メッセージが表示されます。
- * 
- *   <checkEnemyStatus>
- *     対象の情報を見ます。
- *     対象が図鑑に載る敵キャラだった場合図鑑が表示され、
- *     そうでなかった場合失敗メッセージが表示されます。
- *     このスキルでは、対象の現在のパラメータ（現在HPなど）が表示されます。
- * 
- * この２つのスキルのメッセージはプラグインパラメータで設定できます。
+ * 〇v1.17
+ * EnemyBook showAllInBattle
+ *   戦闘中に「図鑑」を開くことができるようにします。
+ * EnemyBook hideAllInBattle
+ *   戦闘中に「図鑑」を開くことができないようにします。
  * 
  * ============================================================================
- * その他のタグ
+ * 敵キャラのメモ欄
  * ============================================================================
  * 
- * 敵キャラのメモ：
- *   <bookLevel:3>
- *     図鑑に強さの目安となるレベルを記載します。
- *     何も書かなければ、何も表示されません。
+ * 〇EnemyBook.jsと同じタグ
  * 
- *   <bookCanCheck>
- *     Version 1.04で追加しました。
- *     <book:no>を書いた敵でもこのタグを付ければ<checkEnemyStatus>のスキルで
- *     チェックできます。
+ * <desc1:なんとか>
+ *   説明１行目です。
+ * <desc2:かんとか>
+ *   説明２行目です。
+ * <book:no>
+ *   これを設定した敵キャラは図鑑に載りません。
  * 
- * ステートのメモ：
- *   <book:no>
- *     図鑑に表示しないようにできます。
+ * 〇その他のタグ
  * 
+ * <bookLevel:3>
+ *   図鑑に強さの目安となるレベルを記載します。
+ *   何も書かなければ、何も表示されません。
+ * 
+ * <bookCanCheck>
+ *   Version 1.04で追加しました。
+ *   <book:no>を書いた敵でもこのタグを付ければ<checkEnemyStatus>のスキルで
+ *   チェックできます。
+ * 
+ * ============================================================================
+ * スキルのメモ欄
+ * ============================================================================
+ * 
+ * <addToEnemyBook>
+ *   対象を図鑑に登録します。
+ *   対象が図鑑に載る敵キャラだった場合は成功メッセージが、
+ *   そうでなかった場合失敗メッセージが表示されます。
+ * 
+ * <checkEnemyStatus>
+ *   対象の情報を見ます。
+ *   対象が図鑑に載る敵キャラだった場合図鑑が表示され、
+ *   そうでなかった場合失敗メッセージが表示されます。
+ *   このスキルでは、対象の現在のパラメータ（現在HPなど）が表示されます。
+ * 
+ * この2つのスキルのメッセージはプラグインパラメータで設定できます。
+ * 
+ * ============================================================================
+ * ステートのメモ欄
+ * ============================================================================
+ * 
+ * <book:no>
+ *   このステートを図鑑に表示しないようにできます。
  * 
  * ============================================================================
  * 更新履歴
  * ============================================================================
+ * 
+ * Version 1.17
+ *   ヘルプを見やすくしました。
+ *   戦闘中に図鑑のすべての敵キャラの情報を見られるコマンド「図鑑」を追加しまし
+ *   た。そのため、プラグインパラメータ２つとプラグインコマンド２つを追加しまし
+ *   た。
+ *   戦闘中にアイテムなどで図鑑を開いたとき、戦闘中の敵ではなく、図鑑全体を開く
+ *   ようにしました。そのとき、シーンを挿入するのではなくバトルシーン上のウィン
+ *   ドウを使うようにしました。これにより戦闘中に図鑑を開いてもターンがリセット
+ *   されるバグを回避できます。
  * 
  * Version 1.16
  *   プラグインコマンドで、指定したIDの敵キャラの画面を開けるようにしました。
@@ -422,10 +610,13 @@
  *     https://tkool.jp/support/guideline
  */
 
+
 (function() {
 	var parameters = PluginManager.parameters('AB_EnemyBook');
 	var EnemyBookCommandName = (parameters['EnemyBookCommandName'] || "敵の情報");
 	var ShowCommandInBattle = (parameters['ShowCommandInBattle'] == 1) ? true : false;
+	var EnemyBookAllCommandName = (parameters['EnemyBookAllCommandName'] || "図鑑");
+	var ShowAllBookCommandInBattle = (parameters['ShowAllBookCommandInBattle'] == 1) ? true : false;
 	var ResisterTiming = Number(parameters['ResisterTiming']);
 	var Achievement = String(parameters['Achievement'] || "");
 	var UnknownEnemy = String(parameters['UnknownEnemy'] || "");
@@ -480,7 +671,12 @@
 		if (command === 'EnemyBook') {
 			switch(args[0]) {
 			case 'open':
-				SceneManager.push(Scene_EnemyBook);
+				// v1.17
+				if ($gameParty.inBattle()) {
+					SceneManager._scene.allBattleEnemyBook();
+				} else {
+					SceneManager.push(Scene_EnemyBook);
+				}
 				break;
 			case 'add':
 				$gameSystem.addToEnemyBook(Number(args[1]));
@@ -520,6 +716,13 @@
 				$gameTemp.ABEnemyBookId = Number(args[1]);
 				SceneManager.push(Scene_EnemyBook);
 				break;
+			//v1.17
+			case 'showAllInBattle':
+				$gameSystem.setShowBattleAllEnemyBook(true);
+				break;
+			case 'hideAllInBattle':
+				$gameSystem.setShowBattleAllEnemyBook(false);
+				break;
 			}
 		}
 	};
@@ -532,6 +735,7 @@
 
 	Game_System.prototype.initEnemyBookSettings = function() {
 		this._showBattleEnemyBook = ShowCommandInBattle;
+		this._showAllBookCommandInBattle = ShowAllBookCommandInBattle;
 		this._showCurrentEnemyStatus = ShowCurrentStatus;
 	};
 
@@ -541,6 +745,14 @@
 	Game_System.prototype.isShowBattleEnemyBook = function() {
 		if (this._showBattleEnemyBook === undefined) this.initEnemyBookSettings();
 		return this._showBattleEnemyBook;
+	};
+
+	Game_System.prototype.setShowBattleAllEnemyBook = function(value) {
+		this._showAllBookCommandInBattle = value;
+	};
+	Game_System.prototype.isShowBattleAllEnemyBook = function() {
+		if (this._showAllBookCommandInBattle === undefined) this.initEnemyBookSettings();
+		return this._showAllBookCommandInBattle;
 	};
 
 	Game_System.prototype.setShowCurrentEnemysStatus = function(value) {
@@ -728,6 +940,7 @@
 	Window_PartyCommand.prototype.makeCommandList = function() {
 		Window_PartyCommand_prototype_makeCommandList.call(this);
 		this.addEnemyBookCommand();
+		this.addAllEnemyBookCommand();
 	}
 
 	Window_PartyCommand.prototype.addEnemyBookCommand = function() {
@@ -735,6 +948,14 @@
 		var index = this.findSymbol('escape');
 		var obj = {name:EnemyBookCommandName, symbol:'enemybook', enabled:true};
 		//this.addCommandAt(index, EnemyBookCommandName, 'enemybook', true);
+		this._list.splice(index, 0, obj);
+		
+	};
+	// v1.17
+	Window_PartyCommand.prototype.addAllEnemyBookCommand = function() {
+		if (!$gameSystem.isShowBattleAllEnemyBook()) return;
+		var index = this.findSymbol('escape');
+		var obj = {name:EnemyBookAllCommandName, symbol:'allenemybook', enabled:true};
 		this._list.splice(index, 0, obj);
 	};
 
@@ -782,17 +1003,31 @@
 		Scene_Battle_prototype_createPartyCommandWindow.call(this);
 		var win = this._partyCommandWindow;
 		win.setHandler('enemybook', this.battleEnemyBook.bind(this));
+		win.setHandler('allenemybook', this.allBattleEnemyBook.bind(this));
 	};
 
 	Scene_Battle.prototype.battleEnemyBook = function() {
+		// v1.17
+		this._enemyBookStatusWindow.isAllEnemies = false;
+		this._enemyBookIndexWindow.isAllEnemies = false;
+		this._enemyBookStatusWindow.setup();
+		this._enemyBookIndexWindow.setup();
+	};
+// v1.17
+	Scene_Battle.prototype.allBattleEnemyBook = function() {
+		this._enemyBookStatusWindow.isAllEnemies = true;
+		this._enemyBookIndexWindow.isAllEnemies = true;
 		this._enemyBookStatusWindow.setup();
 		this._enemyBookIndexWindow.setup();
 	};
 
+	// v1.17deselectをcloseの後に移動
+	// これが呼ばれた後に
+	// Window_EnemyBookIndex.processCancelが呼ばれる？
 	Scene_Battle.prototype.endBattleEnemyBook = function() {
-		this._enemyBookIndexWindow.deselect();
 		this._enemyBookIndexWindow.close();
 		this._enemyBookStatusWindow.close();
+		this._enemyBookIndexWindow.deselect();
 		//this.startPartyCommandSelection();
 	};
 
@@ -824,6 +1059,8 @@
 		this.addWindow(this._indexWindow);
 		this.addWindow(this._statusWindow);
 		// Xv1.16 （セットアップって自動で呼ばれたような？）
+		this._indexWindow.isAllEnemies = true;
+		this._statusWindow.isAllEnemies = true;
 		this._indexWindow.setup();
 		this._indexWindow.setStatusWindow(this._statusWindow);
 		this._indexWindow.setPercentWindow(this._percentWindow);
@@ -923,11 +1160,16 @@
 		var height = Graphics.boxHeight - y;
 		Window_Selectable.prototype.initialize.call(this, x, y, width, height);
 		//this.refresh();
+		// v1.17
+		this.isAllEnemies = false;
 	}
 
 	Window_EnemyBookIndex.prototype.setup = function() {
 		this.refresh();
-		if ($gameParty.inBattle()) {
+				// v1.17
+		// setupがいつ呼ばれるかによっては図鑑を開いたときでも
+		// 初期カーソルが0になってしまう恐れ
+		if (!this.isAllEnemies) {
 			this.select(0);
 		// ver1.16
 		} else if ($gameTemp.ABEnemyBookId){
@@ -950,9 +1192,13 @@
 		this.open();
 	};
 
-	Window_EnemyBookIndex.prototype.backSetup = function() {
+	Window_EnemyBookIndex.prototype.setupWhenCheck = function() {
 		this.refresh();
-		if ($gameParty.inBattle()) {
+				// v1.17
+		// setupWhenCheckがいつ呼ばれるかによっては図鑑を開いたときでも
+		// 初期カーソルが0になってしまう恐れ
+		// ただsetupWhenCheckはチェックスキルのときだけ使われるので平気だった
+		if (!this.isAllEnemies) {
 			this.select(0);
 		} else {
 			this.select(Window_EnemyBookIndex.lastIndex);
@@ -1003,14 +1249,16 @@
 		this._list = [];
 		if (this.enemy) {
 			this._list.push(this.enemy);
-		} else if ($gameParty.inBattle() && $gameSystem.isShowCurrentEnemysStatus()) {
+				// v1.17
+		} else if (!this.isAllEnemies && $gameSystem.isShowCurrentEnemysStatus()) {
 			var enemies = $gameTroop.aliveMembers();
 			for (var i=0,l=enemies.length; i<l; i++) {
 				if (enemies[i].enemy().meta.book !== 'no') {
 					this._list.push(enemies[i]);
 				}
 			}
-		} else if ($gameParty.inBattle()) {
+				// v1.17
+		} else if (!this.isAllEnemies) {
 			var enemyIds = [];
 			var enemies = $gameTroop.aliveMembers();
 			for (var i=0,l=enemies.length; i<l; i++) {
@@ -1041,26 +1289,39 @@
 		var enemy = this._list[index];
 		var rect = this.itemRectForText(index);
 		var name;
+		// ここは、名前を？にするか判定しているだけなので変えない
 		if ($gameTroop.inBattle() || $gameSystem.isInEnemyBook(enemy.enemy())) {
 			name = enemy.name();
 		} else {
 			name = UnknownEnemy;
 		}
-		if (!$gameParty.inBattle() && DispNo) {
+				// v1.17
+		if (this.isAllEnemies && DispNo) {
 			this.drawText(index+1, rect.x, rect.y, 40);
 			this.drawText(name, rect.x + 40, rect.y, rect.width - 40);
 		} else {
 			this.drawText(name, rect.x, rect.y, rect.width);
 		}
 	};
-
+/* ツクールMV rpg_windows.jsより
+Window_Selectable.processCancelでハンドラが呼ばれている。
+Window_Selectable.prototype.processCancel = function() {
+    SoundManager.playCancel();
+    this.updateInputData();
+    this.deactivate();
+    this.callCancelHandler();
+};
+*/
+// TODO: 戦闘中に図鑑（全体）を開いた後、チェックスキルを使うと何も表示されない
 	Window_EnemyBookIndex.prototype.processCancel = function() {
-		Window_Selectable.prototype.processCancel.call(this);
-		if (!$gameParty.inBattle()) {
+		// v1.17
+		if (this.isAllEnemies) {
 			Window_EnemyBookIndex.lastIndex = this.index();
 		}
 		this.enemy = null;
 		this._statusWindow.isCheck = false;
+		// v1.17 後ろに移動
+		Window_Selectable.prototype.processCancel.call(this);
 	};
 
 //=============================================================================
@@ -1086,6 +1347,8 @@
 		this.addChildToBack(this._enemySprite);
 		this.isCheck = false;
 		this.refresh();
+		// v1.17
+		this.isAllEnemies = false;
 		// this._cw = 0;
 		this._spriteFrameCountAB = 0;
 	};
@@ -1178,7 +1441,8 @@
 
 		this.contents.clear();
 
-		if (!enemy || (!$gameTroop.inBattle() && !$gameSystem.isInEnemyBook(enemy.enemy()))) {
+				// v1.17
+		if (!enemy || (this.isAllEnemies && !$gameSystem.isInEnemyBook(enemy.enemy()))) {
 			this._enemySprite.bitmap = null;
 			return;
 		}
@@ -1273,7 +1537,8 @@
 
 		for (var i = 0; i < 8; i++) {
 			if (dispParameters[i]) {
-				if (i == 0 && $gameTroop.inBattle() && ($gameSystem.isShowCurrentEnemysStatus() || this.isCheck)) {
+				// v1.17
+				if (i == 0 && !this.isAllEnemies && ($gameSystem.isShowCurrentEnemysStatus() || this.isCheck)) {
 					if (!isUnknownEnemy) {
 						this.drawActorHp(enemy, x, y, 220);
 					}	else {
@@ -1282,7 +1547,8 @@
 						this.resetTextColor();
 						this.drawText(UnknownData, x + w, y, w, 'right');
 					}
-				} else if (i == 1 && $gameTroop.inBattle() && ($gameSystem.isShowCurrentEnemysStatus() || this.isCheck)) {
+				// v1.17
+				} else if (i == 1 && !this.isAllEnemies && ($gameSystem.isShowCurrentEnemysStatus() || this.isCheck)) {
 					if (!isUnknownEnemy) {
 						this.drawActorMp(enemy, x, y, 220);
 					}	else {
@@ -1597,7 +1863,11 @@
 			var statusWindow = SceneManager._scene._enemyBookStatusWindow;
 			indexWindow.enemy = target;
 			statusWindow.isCheck = true;
-			indexWindow.backSetup();
+			// v1.17
+			indexWindow.isAllEnemies = false;
+			statusWindow.isAllEnemies = false;
+
+			indexWindow.setupWhenCheck();
 			statusWindow.setupWhenCheck();
 		} else {
 			var message = FailToCheckEnemySkillMessage.replace("%1", target.name());
