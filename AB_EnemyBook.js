@@ -1,6 +1,6 @@
 ﻿// =============================================================================
 // AB_EnemyBook.js
-// Version: 1.33
+// Version: 1.34
 // -----------------------------------------------------------------------------
 // [Homepage]: ヱビのノート
 //             http://www.zf.em-net.ne.jp/~ebi-games/
@@ -9,7 +9,7 @@
 
 
 /*:
- * @plugindesc v1.33 Displays detailed statuses of enemies.
+ * @plugindesc v1.34 Displays detailed statuses of enemies.
  * Includes element rates, state rates etc.
  * @author ヱビ
  * 
@@ -20,7 +20,7 @@
  * @value 1
  * @option hide
  * @value 0
- * @desc Do you want to show the "Enemy Info" command in the battle scenes?
+ * @desc Do you wish to show the "Enemy Info" command in the battle scenes?
  * You can change this in pluguin command. 0: show, 1:hide
  * @default 1
  * 
@@ -31,7 +31,7 @@
  * @value 1
  * @option hide
  * @value 0
- * @desc Do you want to show the "Enemybook" command in the battle scenes?
+ * @desc Do you wish to show the "Enemybook" command in the battle scenes?
  * You can change this in pluguin command. 0: show, 1:hide
  * @default 1
  * 
@@ -54,7 +54,7 @@
  * @value 1
  * @option OFF
  * @value 0
- * @desc Do you want to display "current status" like current HP in "Enemybook" and "Enemy Info"?
+ * @desc Do you wish to display "current status" like current HP in "Enemybook" and "Enemy Info"?
  * You can change this in pluguin command. 0: ON, 1:OFF
  * @default 0
  * 
@@ -65,7 +65,7 @@
  * @value 1
  * @option OFF
  * @value 0
- * @desc Do you want to hide status on "Check Skill" if the enemy is unknown? 0:OFF、1:ON
+ * @desc Do you wish to hide status on "Check Skill" if the enemy is unknown? 0:OFF、1:ON
  * @default 0
  * 
  * @param ShowGeneralStatusInSkill
@@ -75,7 +75,7 @@
  * @value 1
  * @option OFF
  * @value 0
- * @desc Do you want to display general status in "Check Skill" ? (general status <--> current status)
+ * @desc Do you wish to display general status in "Check Skill" ? (general status <--> current status)
  * @default 0
  * 
  * @param HideItemUntilGet
@@ -85,7 +85,7 @@
  * @value 1
  * @option OFF
  * @value 0
- * @desc Do you want to hide items until get? 0:OFF、1:ON
+ * @desc Do you wish to hide items until get? 0:OFF、1:ON
  * @default 0
  * 
  * @param ShortCutButtonName
@@ -109,8 +109,15 @@
  * @param SpreadBackgroundImage
  * @text Spread Background Image
  * @type boolean
- * @desc Do you want to spread "Check Skill" window width to cover the all width?
+ * @desc Do you wish to spread "Check Skill" window width to cover the all width?
  * @default false
+ * 
+ * @param EnemyOffsetY
+ * @text Enemy Photo Offset Y
+ * @type number
+ * @min -9999
+ * @desc This is the pixel number how much move to down from defaut position. If Minus number, move to up.
+ * @default 0
  * 
  * 
  * @param ---Terms and Icons---
@@ -217,7 +224,7 @@
  * @value 1
  * @option hide
  * @value 0
- * @desc Do you want to display index number of enemy in Enemybook? 1:show, 0:hide
+ * @desc Do you wish to display index number of enemy in Enemybook? 1:show, 0:hide
  * @default 1
  * 
  * @param DispLv
@@ -227,7 +234,7 @@
  * @value 1
  * @option hide
  * @value 0
- * @desc Do you want to display level of enemy in Enemybook? 1: show, 0: hide
+ * @desc Do you wish to display level of enemy in Enemybook? 1: show, 0: hide
  * @default 1
  * 
  * @param DispDefeatNumber
@@ -237,7 +244,7 @@
  * @value 1
  * @option hide
  * @value 0
- * @desc Do you want to display defeat number in the Enemybook? 0: show, 1: hide
+ * @desc Do you wish to display defeat number in the Enemybook? 0: show, 1: hide
  * @default 1
  * 
  * @param DispHP
@@ -247,7 +254,7 @@
  * @value 1
  * @option hide
  * @value 0
- * @desc Do you want to display HP in the Enemybook? 0: show, 1: hide
+ * @desc Do you wish to display HP in the Enemybook? 0: show, 1: hide
  * @default 1
  * 
  * @param DispMP
@@ -257,7 +264,7 @@
  * @value 1
  * @option hide
  * @value 0
- * @desc Do you want to display MP in the Enemybook? 0: show, 1: hide
+ * @desc Do you wish to display MP in the Enemybook? 0: show, 1: hide
  * @default 1
  * 
  * @param DispTP
@@ -267,7 +274,7 @@
  * @value 1
  * @option hide
  * @value 0
- * @desc Do you want to display TP in the Enemybook? 0: show, 1: hide
+ * @desc Do you wish to display TP in the Enemybook? 0: show, 1: hide
  * @default 0
  * 
  * @param DispATK
@@ -277,7 +284,7 @@
  * @value 1
  * @option hide
  * @value 0
- * @desc Do you want to display ATK in the Enemybook? 0: show, 1: hide
+ * @desc Do you wish to display ATK in the Enemybook? 0: show, 1: hide
  * @default 1
  * 
  * @param DispDEF
@@ -287,7 +294,7 @@
  * @value 1
  * @option hide
  * @value 0
- * @desc Do you want to display DEF in the Enemybook? 0: show, 1: hide
+ * @desc Do you wish to display DEF in the Enemybook? 0: show, 1: hide
  * @default 1
  * 
  * @param DispMAT
@@ -297,7 +304,7 @@
  * @value 1
  * @option hide
  * @value 0
- * @desc Do you want to display MAT in the Enemybook? 0: show, 1: hide
+ * @desc Do you wish to display MAT in the Enemybook? 0: show, 1: hide
  * @default 1
  * 
  * @param DispMDF
@@ -307,7 +314,7 @@
  * @value 1
  * @option hide
  * @value 0
- * @desc Do you want to display MDF in the Enemybook? 0: show, 1: hide
+ * @desc Do you wish to display MDF in the Enemybook? 0: show, 1: hide
  * @default 1
  * 
  * @param DispAGI
@@ -317,7 +324,7 @@
  * @value 1
  * @option hide
  * @value 0
- * @desc Do you want to display AGI in the Enemybook? 0: show, 1: hide
+ * @desc Do you wish to display AGI in the Enemybook? 0: show, 1: hide
  * @default 1
  * 
  * @param DispLUK
@@ -327,7 +334,7 @@
  * @value 1
  * @option hide
  * @value 0
- * @desc Do you want to display LUK in the Enemybook? 0: show, 1: hide
+ * @desc Do you wish to display LUK in the Enemybook? 0: show, 1: hide
  * @default 1
  * 
  * @param DispHitRate
@@ -337,13 +344,13 @@
  * @value 1
  * @option hide
  * @value 0
- * @desc Do you want to display Hit Rate in the Enemybook? 0: show, 1: hide
+ * @desc Do you wish to display Hit Rate in the Enemybook? 0: show, 1: hide
  * @default 0
  * 
  * @param DispSkillNumber
  * @text Display Skills Number
  * @type number
- * @desc How many skills do you want to display?
+ * @desc How many skills Do you wish to display?
  * @default 0
  * 
  * @param DispDropItems
@@ -353,7 +360,7 @@
  * @value 1
  * @option hide
  * @value 0
- * @desc Do you want to display Drop Items in the Enemybook? 0: show, 1: hide
+ * @desc Do you wish to display Drop Items in the Enemybook? 0: show, 1: hide
  * @default 1
  * 
  * @param DispWeakElement
@@ -363,7 +370,7 @@
  * @value 1
  * @option hide
  * @value 0
- * @desc Do you want to display Weak Element in the Enemybook? 0: show, 1: hide
+ * @desc Do you wish to display Weak Element in the Enemybook? 0: show, 1: hide
  * @default 1
  * 
  * @param DispResistElement
@@ -373,7 +380,7 @@
  * @value 1
  * @option hide
  * @value 0
- * @desc Do you want to display Resist Element in the Enemybook? 0: show, 1: hide
+ * @desc Do you wish to display Resist Element in the Enemybook? 0: show, 1: hide
  * @default 1
  * 
  * @param DispWeakState
@@ -383,7 +390,7 @@
  * @value 1
  * @option hide
  * @value 0
- * @desc Do you want to display Weak State in the Enemybook? 0: show, 1: hide
+ * @desc Do you wish to display Weak State in the Enemybook? 0: show, 1: hide
  * @default 1
  * 
  * @param DispResistState
@@ -393,7 +400,7 @@
  * @value 1
  * @option hide
  * @value 0
- * @desc Do you want to display Resist State in the Enemybook? 0: show, 1: hide
+ * @desc Do you wish to display Resist State in the Enemybook? 0: show, 1: hide
  * @default 1
  * 
  * @param DispNoEffectState
@@ -403,7 +410,7 @@
  * @value 1
  * @option hide
  * @value 0
- * @desc Do you want to display Invalid State in the Enemybook? 0: show, 1: hide
+ * @desc Do you wish to display Invalid State in the Enemybook? 0: show, 1: hide
  * @default 0
  * 
  * @param DispDescribe
@@ -413,7 +420,7 @@
  * @value 1
  * @option hide
  * @value 0
- * @desc Do you want to display Describe in the Enemybook? 0: show, 1: hide
+ * @desc Do you wish to display Describe in the Enemybook? 0: show, 1: hide
  * @default 1
  * 
  * @param DescribeLineNumber
@@ -433,7 +440,7 @@
  * @value 1
  * @option OFF
  * @value 0
- * @desc Do you want to use the under parameter for element icon? (not icon tag in the element name)
+ * @desc Do you wish to use the under parameter for element icon? (not icon tag in the element name)
  * 0:OFF、1:ON
  * @default 1
  * 
@@ -685,6 +692,9 @@
  * Update Log
  * ============================================================================
  * 
+ * Version 1.34
+ *   Change to be able to change Enemy Photo Offset Y.
+ * 
  * Version 1.33
  *   Change to be able to change background image opacity by setting plugin
  *   parameter.
@@ -714,7 +724,7 @@
  */
 
 /*:ja
- * @plugindesc v1.33 戦闘中も確認できるモンスター図鑑です。属性、ステートの耐性の確認もできます。
+ * @plugindesc v1.34 戦闘中も確認できるモンスター図鑑です。属性、ステートの耐性の確認もできます。
  * @author ヱビ
  * 
  * @param ShowCommandInBattle
@@ -817,6 +827,13 @@
  * @type number
  * @desc 背景画像の不透明度です。（０～２５５）
  * @default 120
+ * 
+ * @param EnemyOffsetY
+ * @text 敵キャラ画像オフセットY
+ * @type number
+ * @min -9999
+ * @desc ここで指定したピクセル数分、敵キャラの画像が下方向にずれます。マイナスで上にずれます。
+ * @default 0
  * 
  * 
  * 
@@ -1400,6 +1417,9 @@
  * 更新履歴
  * ============================================================================
  * 
+ * Version 1.34
+ *   敵キャラのY軸の位置を設定できるようにしました。
+ * 
  * Version 1.33
  *   プラグインパラメータで背景画像の不透明度を設定できるようにしました。
  * 
@@ -1586,6 +1606,9 @@
 	var BackgroundImage = String(parameters['BackgroundImage']);
 	var BackgroundImageOpacity = Number(parameters['BackgroundImageOpacity']);
 	var SpreadBackgroundImage = eval(parameters['SpreadBackgroundImage']);
+
+
+	var EnemyOffsetY = Number(parameters['EnemyOffsetY']);
 
 	// v1.28
 	var ShortCutButtonName = String(parameters['ShortCutButtonName']);
@@ -2421,7 +2444,7 @@ Window_Selectable.prototype.processCancel = function() {
 		this._enemySprite.anchor.x = 0.5;
 		this._enemySprite.anchor.y = 0.5;
 		this._enemySprite.x = width / 4;
-		this._enemySprite.y = width / 4 + this.lineHeight();
+		this._enemySprite.y = width / 4 + this.lineHeight() + EnemyOffsetY;
 		this.addChildToBack(this._enemySprite);
 		/* ver 1.31*/
 		if (this._backgroundSprite == undefined) {
@@ -2539,7 +2562,7 @@ Window_Selectable.prototype.processCancel = function() {
 		}
 		
 		this._enemySprite.x = x+ width / 4;
-		this._enemySprite.y = width / 4 + this.lineHeight();
+		this._enemySprite.y = width / 4 + this.lineHeight() + EnemyOffsetY;
 
 		this.drawAllContents(x,y,width,height);
 
