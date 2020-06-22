@@ -35,29 +35,29 @@ You can display these statuses.
 ## 5 Ways For Players To Use
 
 
-1. Enemybook
-Display      : All Enemies Resisterd in The Enemybook
-Player Action: Uses Item, Talks to people,
-               "Enemybook" command in the Battle Scene
+### 1. Enemybook
+Display      : All Enemies Resisterd in The Enemybook  
+Player Action: Uses Item, Talks to people,  
+               "Enemybook" command in the Battle Scene  
 
-2. Enemy Info in the Battle Scene
-Display      : Battle Members List. Current Status Like Current HP.
-Player Action: "Enemy Info" command in the Battle Scene
-Settings     : Plugin Parameter 'Show Current Status In The "Enemy Info"' ON
+### 2. Enemy Info in the Battle Scene  
+Display      : Battle Members List. Current Status Like Current HP.  
+Player Action: "Enemy Info" command in the Battle Scene  
+Settings     : Plugin Parameter 'Show Current Status In The "Enemy Info"' ON  
 
-3. General Info of Battle Enemies
-Display      : Battle Members List. General Status (not current status).
-Player Action: "Enemy Info" command in the Battle Scene
-Settings     : Plugin Parameter 'Show Current Status In The "Enemy Info"' OFF
+### 3. General Info of Battle Enemies  
+Display      : Battle Members List. General Status (not current status).  
+Player Action: "Enemy Info" command in the Battle Scene  
+Settings     : Plugin Parameter 'Show Current Status In The "Enemy Info"' OFF  
 
-4. Check Skill
-Display      : The target enemy's Current Status
-Player Action: Use "Check Skill" For Enemy
+### 4. Check Skill  
+Display      : The target enemy's Current Status  
+Player Action: Use "Check Skill" For Enemy  
 
-5. Check Skill (General Data) - v1.24
-Display      : The target enemy's General Status
-Player Action: Use "Check Skill" For Enemy
-Settings     : Plugin Parameter 'Show General Status In "Check Skill"' ON
+### 5. Check Skill (General Data) - v1.24  
+Display      : The target enemy's General Status  
+Player Action: Use "Check Skill" For Enemy  
+Settings     : Plugin Parameter 'Show General Status In "Check Skill"' ON  
 
 
 ## How To Use
@@ -80,8 +80,8 @@ But by default, there are too many items to display and lack to space.Please rem
   example：\i[64]Fire
 
 2. Use Plugin Parameter - v1.04
-  Please "Use Element Icon In Plugin Parameter" Plugin Parameter set to ON
-  and type icon numbers split with space in "Element Icons".
+  Please "Use Element Icon In Plugin Parameter" Plugin Parameter set to ON and type icon numbers split with space in "Element Icons".
+
   example：76 64 65 66 67 68 69 70 71
 
 ### ○Unknown Enemy "???"
