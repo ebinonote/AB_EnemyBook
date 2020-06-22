@@ -1,6 +1,6 @@
 ﻿// =============================================================================
 // AB_EnemyBook.js
-// Version: 1.31
+// Version: 1.32
 // -----------------------------------------------------------------------------
 // [Homepage]: ヱビのノート
 //             http://www.zf.em-net.ne.jp/~ebi-games/
@@ -9,7 +9,7 @@
 
 
 /*:
- * @plugindesc v1.31 Displays detailed statuses of enemies.
+ * @plugindesc v1.32 Displays detailed statuses of enemies.
  * Includes element rates, state rates etc.
  * @author ヱビ
  * 
@@ -94,6 +94,17 @@
  * @desc Display "Enemy Info" when this key triggerd.
  * @default shift
  * 
+ * @param BackgroundImage
+ * @text Background Image
+ * @type file
+ * @dir img/parallaxes
+ * @desc This is the Background image.
+ * 
+ * @param SpreadBackgroundImage
+ * @text Spread Background Image
+ * @type boolean
+ * @desc Do you want to spread "Check Skill" window width to cover the all width?
+ * @default false
  * 
  * 
  * @param ---Terms and Icons---
@@ -668,6 +679,10 @@
  * Update Log
  * ============================================================================
  * 
+ * 
+ * Version 1.32
+ *   Change to be able to display background image by setting plugin parameter.
+ * 
  * Version 1.30
  *   Translate this help to English.
  * 
@@ -690,7 +705,7 @@
  */
 
 /*:ja
- * @plugindesc v1.31 戦闘中も確認できるモンスター図鑑です。属性、ステートの耐性の確認もできます。
+ * @plugindesc v1.32 戦闘中も確認できるモンスター図鑑です。属性、ステートの耐性の確認もできます。
  * @author ヱビ
  * 
  * @param ShowCommandInBattle
@@ -775,6 +790,18 @@
  * @desc 戦闘中に敵の情報をこのショートカットキーで
  * 見られるようにします。
  * @default shift
+ * 
+ * @param BackgroundImage
+ * @text 背景画像
+ * @type file
+ * @dir img/parallaxes
+ * @desc 背景をウィンドウではなく画像にします。
+ * 
+ * @param SpreadBackgroundImage
+ * @text 背景画像を広げる
+ * @type boolean
+ * @desc ＯＮにすると、チェックスキルのときウィンドウが画面いっぱいに広がります。
+ * @default false
  * 
  * 
  * 
@@ -1358,6 +1385,9 @@
  * 更新履歴
  * ============================================================================
  * 
+ * Version 1.32
+ *   プラグインパラメータで背景画像を指定できるようにしました。
+ * 
  * Version 1.31
  *   未登録の敵キャラの画像が表示されていた問題を修正しました。
  * 
@@ -1534,6 +1564,9 @@
 	var HideUnknownStatusInSkill = (parameters['HideUnknownStatusInSkill'] == 1) ? true : false;
 	var HideItemUntilGet = (parameters['HideItemUntilGet'] == 1) ? true : false;
 
+	// v1.32
+	var BackgroundImage = String(parameters['BackgroundImage']);
+	var SpreadBackgroundImage = eval(parameters['SpreadBackgroundImage']);
 
 	// v1.28
 	var ShortCutButtonName = String(parameters['ShortCutButtonName']);
@@ -1991,6 +2024,7 @@
 	};
 // v1.17
 	Scene_Battle.prototype.allBattleEnemyBook = function() {
+		AB_EnemyBook.backWindow = 'allEnemies';
 		this._enemyBookStatusWindow.isAllEnemies = true;
 		this._enemyBookIndexWindow.isAllEnemies = true;
 		this._enemyBookStatusWindow.setup();
@@ -2362,6 +2396,7 @@ Window_Selectable.prototype.processCancel = function() {
 	Window_EnemyBookStatus.prototype.initialize = function(x, y, width, height) {
 		Window_Base.prototype.initialize.call(this, x, y, width, height);
 		this._defaultX = x;
+		this._windowWidth = width;
 		this._enemy = null;
 		this._enemySprite = new Sprite();
 		this._enemySprite.anchor.x = 0.5;
@@ -2369,6 +2404,19 @@ Window_Selectable.prototype.processCancel = function() {
 		this._enemySprite.x = width / 4;
 		this._enemySprite.y = width / 4 + this.lineHeight();
 		this.addChildToBack(this._enemySprite);
+		/* ver 1.31*/
+		if (this._backgroundSprite == undefined) {
+				if (BackgroundImage) {
+					this._backgroundSprite = new Sprite();
+			    this._backgroundSprite.bitmap = ImageManager.loadParallax(BackgroundImage);
+					this._backgroundSprite.opacity = 120;
+			    this.addChildToBack(this._backgroundSprite);
+					
+					var bsw = SpreadBackgroundImage ? Graphics.boxWidth : width;
+					this._backgroundSprite.setFrame(0, 0, bsw, Graphics.boxWidth);
+					
+				}
+		}
 		this.isCheck = false;
 		this.refresh();
 		// v1.17
@@ -2379,12 +2427,16 @@ Window_Selectable.prototype.processCancel = function() {
 
 	Window_EnemyBookStatus.prototype.setup = function() {
 		this.x = this._defaultX;
+		this.setupbacksprite();
 		this.show();
 		this.open();
 	};
 
 	Window_EnemyBookStatus.prototype.setupWhenCheck = function() {
 		this.x = Math.floor((Graphics.boxWidth - this.width) / 2);
+		this.width = this.windowWidth();
+		this.setupbacksprite();
+		this.refresh();
 		this.show();
 		this.open();
 	};
@@ -2446,6 +2498,14 @@ Window_Selectable.prototype.processCancel = function() {
 				scale = contentsWidth / bitmapWidth / 2;
 				//console.log("bitmapWidth(+"bitmapWidth"+) > contentsWidth / 2");
 			}
+/*
+			// ver 1.30
+			scale=this.contents.width / this._enemySprite.width;
+			this._enemySprite.anchor.x = 0.5;
+			this._enemySprite.anchor.y = 0.5;
+			this._enemySprite.x = this.contents.width/2;
+			this._enemySprite.y = this.contents.height/2;
+*/
 			this._enemySprite.scale.x = scale;
 			this._enemySprite.scale.y = scale;
 			this._spriteFrameCountAB++;
@@ -2453,13 +2513,29 @@ Window_Selectable.prototype.processCancel = function() {
 	};
 
 	Window_EnemyBookStatus.prototype.refresh = function() {
+		var x = 0, y = 0, width = this.contentsWidth(); height = this.height;
+		if (SpreadBackgroundImage && AB_EnemyBook.backWindow == 'check') {
+			x = Graphics.boxWidth/2 - this._windowWidth / 2;
+			width = this._windowWidth;
+		}
+		
+		this._enemySprite.x = x+ width / 4;
+		this._enemySprite.y = width / 4 + this.lineHeight();
+
+		this.drawAllContents(x,y,width,height);
+
+	};
+
+	
+
+	Window_EnemyBookStatus.prototype.drawAllContents = function(x, y, width, height) {
 		var enemy = this._enemy;
-		var column1x = 0;
-		var column2x = this.contentsWidth() / 2 + this.standardPadding() / 2;
-		var columnWidth = this.contentsWidth() / 2 - this.standardPadding();
-		var x = 0;
-		var y = 0;
-		var w = column2x / 2 - this.standardPadding();
+		var column1x = x;
+		var column2x = width ? x+width / 2 + this.standardPadding()/2 : this.contentsWidth() / 2 + this.standardPadding() / 2;
+		var columnWidth = width ? width / 2 - this.standardPadding() : this.contentsWidth() / 2 - this.standardPadding();
+		var x = x || 0;
+		var y = y || 0;
+		var w = columnWidth / 2 - this.standardPadding();
 		//var mY = 0;
 		var lineHeight = this.lineHeight();
 
@@ -2682,7 +2758,7 @@ Window_Selectable.prototype.processCancel = function() {
 			}
 		}
 
-		x = 0;
+		x = column1x;
 		if (maxY > y) y = maxY;
 		y += this.standardPadding();
 		//y = Scene_EnemyBook.prototype.calcParameterHeight();
@@ -2720,7 +2796,7 @@ Window_Selectable.prototype.processCancel = function() {
 		}
 		if (x == column2x) 
 			y += lineHeight * 2 + this.textPadding();
-		x = 0;
+		x = column1x;
 		
 		if (!isHideStatus && DispDescribe) {
 			for (var i = 1; i <= DescribeLineNumber; i++) {
@@ -2915,6 +2991,9 @@ Window_Selectable.prototype.processCancel = function() {
 			this.drawText(UnknownData, x, y);
 		}
 	};
+
+
+
 //=============================================================================
 // Game_Action
 //=============================================================================
@@ -3153,11 +3232,81 @@ Window_Selectable.prototype.processCancel = function() {
         if (this.isOpenAndActive()) {
             if (Input.isTriggered(ShortCutButtonName)) {
                 this.processAB_EnemyBook();
-								console.log("itemshift");
             }
         }
     };
 
+/**-----*/
 
+Window_EnemyBookStatus.prototype.updateBackOpacity = function() {
+		if (!BackgroundImage) {
+			Window_Base.prototype.updateBackOpacity.call(this);
+			return;
+		} 
+    this.backOpacity = 0;
+		this.opacity = 0;
+};
+Window_EnemyBookStatus.prototype.windowWidth = function() {
+		return this._windowWidth;
+};
+Window_EnemyBookStatus.prototype.setupbacksprite = function() {
+		if (SpreadBackgroundImage) {
+			if (AB_EnemyBook.backWindow == 'check') {
+				//this._backgroundSprite.x = -(Graphics.boxWidth - this.width)/2;
+				this.x = 0;
+				this.width = Graphics.boxWidth;
+				this.height = Graphics.boxHeight/* + this.standardPadding() * 2*/;
+				if (BackgroundImage && BackgroundImage && this._backgroundSprite != null) {
+					this._backgroundSprite.setFrame(0, 0, this.width, this.height);
+		    }
+				this.createContents();
+				this.refresh();
+				return;
+			}
+		
+			this.x = this._defaultX;
+			this.width = this._windowWidth;
+			this.height = Scene_EnemyBook.prototype.calcStatusWindowHeight();
+			if (BackgroundImage && BackgroundImage && this._backgroundSprite != null) {
+				this._backgroundSprite.x = 0;
+				this._backgroundSprite.setFrame(0, 0, this.width, this.height);
+			}
+	    this.createContents();
+			this.refresh();
+		}
+};
+Window_EnemyBookIndex.prototype.updateBackOpacity = function() {
+		if (!BackgroundImage) {
+			Window_Base.prototype.updateBackOpacity.call(this);
+			return;
+		} 
+		if (this._backgroundSprite == undefined && BackgroundImage) {
+		    this.backOpacity = 0;
+				this.opacity = 0;
+				this._backgroundSprite = new Sprite();
+		    this._backgroundSprite.bitmap = ImageManager.loadParallax(BackgroundImage);
+				this._backgroundSprite.opacity = 120;
+		    this.addChildToBack(this._backgroundSprite);
+				
+		}
+};
+Window_EnemyBookPercent.prototype.updateBackOpacity = function() {
+/**/
+		if (!BackgroundImage) {
+			Window_Base.prototype.updateBackOpacity.call(this);
+			return;
+		} 
+		if (this._backgroundSprite == undefined && BackgroundImage) {
+		    this.backOpacity = 0;
+				this.opacity = 0;
+				this._backgroundSprite = new Sprite();
+		    this._backgroundSprite.bitmap = ImageManager.loadParallax(BackgroundImage);
+				this._backgroundSprite.opacity = 120;
+		    this.addChildToBack(this._backgroundSprite);
+		}
+};
+
+
+/**-----*/
 
 })();
