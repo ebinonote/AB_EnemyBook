@@ -1,6 +1,6 @@
 ﻿// =============================================================================
 // AB_EnemyBook.js
-// Version: 1.29
+// Version: 1.30
 // -----------------------------------------------------------------------------
 // [Homepage]: ヱビのノート
 //             http://www.zf.em-net.ne.jp/~ebi-games/
@@ -9,7 +9,688 @@
 
 
 /*:
- * @plugindesc v1.29 戦闘中も確認できるモンスター図鑑です。属性、ステートの耐性の確認もできます。
+ * @plugindesc v1.30 Displays detailed statuses of enemies.
+ * Includes element rates, state rates etc.
+ * @author ヱビ
+ * 
+ * @param ShowCommandInBattle
+ * @text Show "Enemy Info" Command
+ * @type select
+ * @option show
+ * @value 1
+ * @option hide
+ * @value 0
+ * @desc Do you want to show the "Enemy Info" command in the battle scenes?
+ * You can change this in pluguin command. 0: show, 1:hide
+ * @default 1
+ * 
+ * @param ShowAllBookCommandInBattle
+ * @text Show "Enemybook" Command
+ * @type select
+ * @option show
+ * @value 1
+ * @option hide
+ * @value 0
+ * @desc Do you want to show the "Enemybook" command in the battle scenes?
+ * You can change this in pluguin command. 0: show, 1:hide
+ * @default 1
+ * 
+ * @param ResisterTiming
+ * @type select
+ * @option never
+ * @value 0
+ * @option when the battle start
+ * @value 1
+ * @option when the battle end
+ * @value 2
+ * @desc This is the timing when the enemies resister to the enemy book.
+ * 0:never, 1:when the battle start, 2:when the battle end
+ * @default 2
+ * 
+ * @param ShowCurrentStatus
+ * @text Show Current Status In The "Enemybook"
+ * @type select
+ * @option ON
+ * @value 1
+ * @option OFF
+ * @value 0
+ * @desc Do you want to display "current status" like current HP in "Enemybook" and "Enemy Info"?
+ * You can change this in pluguin command. 0: ON, 1:OFF
+ * @default 0
+ * 
+ * @param HideUnknownStatusInSkill
+ * @text Hide Unknown's Status On "Check Skill"
+ * @type select
+ * @option ON
+ * @value 1
+ * @option OFF
+ * @value 0
+ * @desc Do you want to hide status on "Check Skill" if the enemy is unknown? 0:OFF、1:ON
+ * @default 0
+ * 
+ * @param ShowGeneralStatusInSkill
+ * @text Show General Status In "Check Skill"
+ * @type select
+ * @option ON
+ * @value 1
+ * @option OFF
+ * @value 0
+ * @desc Do you want to display general status in "Check Skill" ? (general status <--> current status)
+ * @default 0
+ * 
+ * @param HideItemUntilGet
+ * @text Hide Item Until Get
+ * @type select
+ * @option ON
+ * @value 1
+ * @option OFF
+ * @value 0
+ * @desc Do you want to hide items until get? 0:OFF、1:ON
+ * @default 0
+ * 
+ * @param ShortCutButtonName
+ * @text Shortcut Button Name
+ * @type string
+ * @desc Display "Enemy Info" when this key triggerd.
+ * @default shift
+ * 
+ * 
+ * 
+ * @param ---Terms and Icons---
+ * @default 
+ * 
+ * @param EnemyBookCommandName
+ * @text "Enemy Info" Command Name
+ * @desc This is the command name show the battle enemies status in the battle scene.
+ * @default Enemy Info
+ * 
+ * @param EnemyBookAllCommandName
+ * @text "Enemybook" Command Name
+ * @desc This is the command name show the all enemies status in the battle scene.
+ * @default Enemybook
+ * 
+ * @param Achievement
+ * @desc This is the "Achivement" name write in the enemybook. The rate of enemies number registers in the book.
+ * @default Achievement
+ * 
+ * @param UnknownEnemy
+ * @text Unknown Enemy Name
+ * @desc This is the index name of enemies that isn't resisterd in the book.
+ * @default ??????
+ * 
+ * @param UnknownData
+ * @text Data Name Of Unknown Enemy
+ * @desc This is the content of unknown enemies' status.
+ * @default ???
+ * 
+ * @param HitRateName
+ * @text Hit Rate Name
+ * @type string
+ * @desc This is the name of Hit Rate.
+ * @default Hit Rate
+ * 
+ * @param WeakElementName
+ * @text Weak Element Name
+ * @desc This is the name of weak element.
+ * @default Weak Element
+ * 
+ * @param ResistElementName
+ * @text Resist Element Name
+ * @desc This is the name of resist element.
+ * @default Resist Element
+ * 
+ * @param WeakStateName
+ * @text Weak State Name
+ * @desc This is the name of weak states.
+ * @default Weak State
+ * 
+ * @param ResistStateName
+ * @text Resist State Name
+ * @desc This is the name of resister states. (includes invalid states).
+ * @default Resist State
+ * 
+ * @param NoEffectStateName
+ * @text Invalid States Name
+ * @desc This is the name of invalid states.
+ * @default Invalid State
+ * 
+ * @param DefeatNumberName
+ * @text Defeat Number Name
+ * @desc This is the name of defeat number.
+ * @default Defeat
+ * 
+ * @param UnknownDropItemIcon
+ * @text Unknown Drop Item Icon
+ * @type number
+ * @min 0
+ * @desc This is the icon number of drop items unknown enemies have.
+ * default：16
+ * @default 16
+ * 
+ * @param AddEnemySkillMessage
+ * @text Succeed Message to Resister Enemy Skill
+ * @desc This is the message when players succeed in resister to the Enemybook. 
+ * %1......Enemy Name
+ * @default Resisterd %1 In the Enemybook!
+ * 
+ * @param FailToAddEnemySkillMessage
+ * @text Unreasonable Message to Resister Enemy Skill
+ * @desc This is the message when players use check skill for the enemy 
+ * that can't be resisterd to the Enemybook. %1......Enemy Name
+ * @default %1 Can't be resisterd to the Enemybook!
+
+ * @param MissToAddEnemySkillMessage
+ * @text Miss Message To Resister Enemy Skill
+ * @desc This is the message when the "Resister Skill" was missed. %1......Enemy Name
+ * @default Missed to resister %1 in the Enemybook!
+ * 
+ * @param FailToCheckEnemySkillMessage
+ * @text Miss Massage To "Check Skill"
+ * @desc This is the message when the "Check Skill" was missed.
+ * %1......Enemy Name
+ * @default Missed to Check %1's States!
+ * 
+ * @param ---Display Item---
+ * @default 
+ * 
+ * @param DispNo
+ * @text Display No
+ * @type select
+ * @option show
+ * @value 1
+ * @option hide
+ * @value 0
+ * @desc Do you want to display index number of enemy in Enemybook? 1:show, 0:hide
+ * @default 1
+ * 
+ * @param DispLv
+ * @text Display Level
+ * @type select
+ * @option show
+ * @value 1
+ * @option hide
+ * @value 0
+ * @desc Do you want to display level of enemy in Enemybook? 1: show, 0: hide
+ * @default 1
+ * 
+ * @param DispDefeatNumber
+ * @text Display Defeat Number
+ * @type select
+ * @option show
+ * @value 1
+ * @option hide
+ * @value 0
+ * @desc Do you want to display defeat number in the Enemybook? 0: show, 1: hide
+ * @default 1
+ * 
+ * @param DispHP
+ * @text Display HP
+ * @type select
+ * @option show
+ * @value 1
+ * @option hide
+ * @value 0
+ * @desc Do you want to display HP in the Enemybook? 0: show, 1: hide
+ * @default 1
+ * 
+ * @param DispMP
+ * @text Display MP
+ * @type select
+ * @option show
+ * @value 1
+ * @option hide
+ * @value 0
+ * @desc Do you want to display MP in the Enemybook? 0: show, 1: hide
+ * @default 1
+ * 
+ * @param DispTP
+ * @text Display TP
+ * @type select
+ * @option show
+ * @value 1
+ * @option hide
+ * @value 0
+ * @desc Do you want to display TP in the Enemybook? 0: show, 1: hide
+ * @default 0
+ * 
+ * @param DispATK
+ * @text Display ATK
+ * @type select
+ * @option show
+ * @value 1
+ * @option hide
+ * @value 0
+ * @desc Do you want to display ATK in the Enemybook? 0: show, 1: hide
+ * @default 1
+ * 
+ * @param DispDEF
+ * @text Display DEF
+ * @type select
+ * @option show
+ * @value 1
+ * @option hide
+ * @value 0
+ * @desc Do you want to display DEF in the Enemybook? 0: show, 1: hide
+ * @default 1
+ * 
+ * @param DispMAT
+ * @text Display MAT
+ * @type select
+ * @option show
+ * @value 1
+ * @option hide
+ * @value 0
+ * @desc Do you want to display MAT in the Enemybook? 0: show, 1: hide
+ * @default 1
+ * 
+ * @param DispMDF
+ * @text Display MDF
+ * @type select
+ * @option show
+ * @value 1
+ * @option hide
+ * @value 0
+ * @desc Do you want to display MDF in the Enemybook? 0: show, 1: hide
+ * @default 1
+ * 
+ * @param DispAGI
+ * @text Display AGI
+ * @type select
+ * @option show
+ * @value 1
+ * @option hide
+ * @value 0
+ * @desc Do you want to display AGI in the Enemybook? 0: show, 1: hide
+ * @default 1
+ * 
+ * @param DispLUK
+ * @text Display LUK
+ * @type select
+ * @option show
+ * @value 1
+ * @option hide
+ * @value 0
+ * @desc Do you want to display LUK in the Enemybook? 0: show, 1: hide
+ * @default 1
+ * 
+ * @param DispHitRate
+ * @text Display Hit Rate
+ * @type select
+ * @option show
+ * @value 1
+ * @option hide
+ * @value 0
+ * @desc Do you want to display Hit Rate in the Enemybook? 0: show, 1: hide
+ * @default 0
+ * 
+ * @param DispSkillNumber
+ * @text Display Skills Number
+ * @type number
+ * @desc How many skills do you want to display?
+ * @default 0
+ * 
+ * @param DispDropItems
+ * @text Display Drop Items
+ * @type select
+ * @option show
+ * @value 1
+ * @option hide
+ * @value 0
+ * @desc Do you want to display Drop Items in the Enemybook? 0: show, 1: hide
+ * @default 1
+ * 
+ * @param DispWeakElement
+ * @text Display Weak Element
+ * @type select
+ * @option show
+ * @value 1
+ * @option hide
+ * @value 0
+ * @desc Do you want to display Weak Element in the Enemybook? 0: show, 1: hide
+ * @default 1
+ * 
+ * @param DispResistElement
+ * @text Display Resist Element
+ * @type select
+ * @option show
+ * @value 1
+ * @option hide
+ * @value 0
+ * @desc Do you want to display Resist Element in the Enemybook? 0: show, 1: hide
+ * @default 1
+ * 
+ * @param DispWeakState
+ * @text Display Weak State
+ * @type select
+ * @option show
+ * @value 1
+ * @option hide
+ * @value 0
+ * @desc Do you want to display Weak State in the Enemybook? 0: show, 1: hide
+ * @default 1
+ * 
+ * @param DispResistState
+ * @text Display Resist State
+ * @type select
+ * @option show
+ * @value 1
+ * @option hide
+ * @value 0
+ * @desc Do you want to display Resist State in the Enemybook? 0: show, 1: hide
+ * @default 1
+ * 
+ * @param DispNoEffectState
+ * @text Display Invalid State
+ * @type select
+ * @option show
+ * @value 1
+ * @option hide
+ * @value 0
+ * @desc Do you want to display Invalid State in the Enemybook? 0: show, 1: hide
+ * @default 0
+ * 
+ * @param DispDescribe
+ * @text Display Describe
+ * @type select
+ * @option show
+ * @value 1
+ * @option hide
+ * @value 0
+ * @desc Do you want to display Describe in the Enemybook? 0: show, 1: hide
+ * @default 1
+ * 
+ * @param DescribeLineNumber
+ * @text Describe Line Number
+ * @type number
+ * @desc How many the lines of describe?
+ * （0～6)
+ * @default 2
+ * 
+ * @param ---Icon of Elements---
+ * @default 
+ * 
+ * @param UseElementIconInPluginParameter
+ * @text Use Element Icon In Plugin Parameter
+ * @type select
+ * @option ON
+ * @value 1
+ * @option OFF
+ * @value 0
+ * @desc Do you want to use the under parameter for element icon? (not icon tag in the element name)
+ * 0:OFF、1:ON
+ * @default 1
+ * 
+ * @param ElementIcons
+ * @text Element Icons
+ * @desc This is the Element Icons. Please type icon numbers split with space.
+ * @default 76 64 65 66 67 68 69 70 71
+ * 
+ * @help
+ * ============================================================================
+ * Summary
+ * ============================================================================
+ * 
+ * This plugin based on the "EnemyBook.js" made by Mr.Yoji Ojima.
+ * 
+ * 
+ * 
+ * This plugin allows
+ * 
+ * 1. Open the Enemybook Scene
+ * 2. Displays more statuses that are not included in the "EnemyBook.js"
+ * 3. Add command "Enemy Info" and "Enemybook" in the battle scene
+ * 4. Create "Check Skill" and "Resister Skill"
+ * 
+ * You can display these statuses.
+ * 
+ * ・Enemy Name
+ * ・Enemy Sprite
+ * ★Enemy's Index Number
+ * ★Enemy's Level
+ * ★Defeat Number
+ * ・HP, MP, ATK, DEF, MAT, MDF, AGI, LUK
+ * ★Skills - v1.30
+ * ・Drop Items
+ * ★Weak Elements, Resister Elements
+ * ★Weak States, Resister States
+ * ・Description
+ * ★Achievement of Enemybook
+ * (★ sindicate new items.)
+ * 
+ * 
+ * ============================================================================
+ * 5 Ways For Players To Use
+ * ============================================================================
+ * 
+ * 1. Enemybook
+ * Display      : All Enemies Resisterd in The Enemybook
+ * Player Action: Uses Item, Talks to people,
+ *                "Enemybook" command in the Battle Scene
+ * 
+ * 2. Enemy Info in the Battle Scene
+ * Display      : Battle Members List. Current Status Like Current HP.
+ * Player Action: "Enemy Info" command in the Battle Scene
+ * Settings     : Plugin Parameter 'Show Current Status In The "Enemy Info"' ON
+ * 
+ * 3. General Info of Battle Enemies
+ * Display      : Battle Members List. General Status (not current status).
+ * Player Action: "Enemy Info" command in the Battle Scene
+ * Settings     : Plugin Parameter 'Show Current Status In The "Enemy Info"' OFF
+ * 
+ * 4. Check Skill
+ * Display      : The target enemy's Current Status
+ * Player Action: Use "Check Skill" For Enemy
+ * 
+ * 5. Check Skill (General Data) - v1.24
+ * Display      : The target enemy's General Status
+ * Player Action: Use "Check Skill" For Enemy
+ * Settings     : Plugin Parameter 'Show General Status In "Check Skill"' ON
+ * 
+ * ============================================================================
+ * How To Use
+ * ============================================================================
+ * 
+ * Just set this plugin to Plugin Manager and
+ * call Plugin Command "EnemyBook open"!
+ * 
+ * Enemies that have name is registerd when player encount on the battle.
+ * (For the enemy you don't want to resister but has name, need setting.)
+ * 
+ * But by default, there are too many items to display and lack to space.
+ * Please remove some items by set on Plugin Parameter.
+ * 
+ * ============================================================================
+ * Other functions
+ * ============================================================================
+ * 
+ * 〇2Ways to Display Element Icon
+ * 
+ * 1. Type Tag in the Element Name 
+ *   example：\i[64]Fire
+ * 
+ * 2. Use Plugin Parameter - v1.04
+ *   Please "Use Element Icon In Plugin Parameter" Plugin Parameter set to ON
+ *   and type icon numbers split with space in "Element Icons".
+ *   example：76 64 65 66 67 68 69 70 71
+ * 
+ * 〇Unknown Enemy "???"
+ * 
+ * If player open the Enemybook when the enemy isn't resistered yet,
+ * Enemybook displays "???" on name and status.
+ * You can change "???" word by setting Plugin Parameter.
+ * 
+ * 〇Current Status Setting And Enemy Info Command
+ * 
+ * When you use "Enemy Info" command, it displays general data by default.
+ * When you set Plugin Parameter Show Current Status In The "Enemy Info" ON,
+ * It displays Current Data.
+ * Not only Current HP, But also ATK and Element Rate change.
+ * You can change setting in game playing by Plugin Command.
+ * 
+ * ○Current States And Check Skill - v1.24
+ * 
+ * When you use "Check Skill", it displays current enemy's data by default.
+ * you can change to display General Status by setting
+ * Plugin Parameter  Show General Status In "Check Skill" ON.
+ * 
+ * 
+ * 
+ * 〇Resister Timing
+ * 
+ * You can set resister timing by setting Plugin Parameter "Resister Timing".
+ * 
+ * 0: Never
+ * 1: When the battle start
+ * 2: When the battle end
+ * 
+ * 〇Display Item "???" that player don't get yet  - v1.22
+ * You can Display Item Name "???" that player don't get yet by
+ * Plugin Parameter "Hide Item Until Get".
+ * 
+ * ============================================================================
+ * Plugin Commands
+ * ============================================================================
+ * 
+ * 〇EnemyBook.js Commands
+ * 
+ * EnemyBook open 
+ *   Open the Enemybook Scene.
+ * EnemyBook add 3
+ *   Register Enemy id 3.
+ * EnemyBook remove 4
+ *   Remove Enemy id 4 from the Enemybook.
+ * EnemyBook complete
+ *   Register all enemies.
+ * EnemyBook clear
+ *   Remove all enemies from the Enemybook.
+ * 
+ * 〇Oter plugin Command
+ * 
+ * EnemyBook showInBattle
+ *   Show "Enemy Info" command in battle.
+ * EnemyBook hideInBattle
+ *   Hide "Enemy Info" command in battle.
+ * EnemyBook showCurrentStatus
+ *   Show Current Status when player uses "Enemy Info" Command.
+ * EnemyBook showGeneralStatus
+ *   Show General Status when player uses "Enemy Info" Command.
+ * 
+ * 〇v1.06
+ * 
+ * EnemyBook getAchievement per 12
+ *   Substitute enemybook achievement(%) for variable id 12.
+ * EnemyBook getAchievement num 14
+ *   Substitute enemybook achievement(number) for variable id 14.
+ * EnemyBook isRegistered 5 96
+ *   Set Switch id 96 whether enemy id 5 is Resisterd or not.
+ * EnemyBook getDefeatNumber 3 24
+ *   Substitute Defeat Number of Enemy id 3 to variable 24.
+ * 
+ * 〇v1.16
+ * EnemyBook openEnemy 16
+ *   Open the enemy 16 page.
+ * 
+ * 〇v1.17
+ * EnemyBook showAllInBattle
+ *   Show "Enemybook" Command in the battle.
+ * EnemyBook hideAllInBattle
+ *   Hide "Enemybook" Command in the battle.
+ * 
+ * 〇v1.20
+ * EnemyBook clearDefeatNumber
+ *   Clear the defeat number of all Enemies.
+ * 
+ * 〇v1.22
+ * EnemyBook clearEnemyDrop
+ *   Clear the enemy drop of all Enemies.
+ * 
+ * ============================================================================
+ * Enemy Note Tag
+ * ============================================================================
+ * 
+ * 〇EnemyBook.js note Tag
+ * 
+ *  - By 1.27 version updating, describe line number increased.
+ * Please set Plugin Parameter "Describe Line Number" the line number
+ * you want to display. Max number is infinity.
+ * 
+ * <desc1:burabura>
+ *   This is the description line 1.
+ * <desc2:buraburaburabura>
+ *   This is the description line 2.
+ * <desc3:buraburabura>
+ *   This is the description line 3.
+ * 
+ * 
+ * <book:no>
+ *   When you type this tag to enemy note, the enemy is not be able to
+ *   registerd.
+ * 
+ * 〇Other tags
+ * 
+ * <bookLevel:3>
+ *   Display the enemy level 3 to Enemybook.
+ *   If you write nothing, level will not be displayed.
+ * 
+ * <bookCanCheck> - v1.04
+ *   Player can see status by "Check Skill" if the enemy has <book:no> tag.
+ * 
+ * ============================================================================
+ * Skill Note Tag
+ * ============================================================================
+ * 
+ * <addToEnemyBook>
+ *   This skill become to "Register Skill".
+ *   This skill resister target to the Enemybook.
+ *   If the enemy can be resisterd, Succeed Message will be displayed.
+ *   If not, Missed Message will displayed.
+ * 
+ * <checkEnemyStatus>
+ *   This skill become to "Check Skill".
+ *   This skill displays target's status.
+ *   If the enemy can be resisterd, status will be displayed.
+ *   If not, Missed Message will displayed.
+ * 
+ *   〇v1.21
+ *   You can displey unknown enemy's status "???" When you set
+ *   Plugin Parameter 'Hide Unknown's Status On "Check Skill"' ON,
+ * 
+ * You can set message of these 2 skills by setting Plugin Parameters.
+ * 
+ * ============================================================================
+ * State Note Tag
+ * ============================================================================
+ * 
+ * <book:no>
+ *   You can hide state in the Enemybook.
+ * 
+ * ============================================================================
+ * Update Log
+ * ============================================================================
+ * 
+ * Version 1.30
+ *   Translate this help to English.
+ * 
+ * ============================================================================
+ * Term of Use
+ * ============================================================================
+ * 
+ * ・Credit - Unnecessary
+ * ・Use in any game engine - not allowed
+ *    You can use this plugin in RPGMakerMV only.
+ *    
+ * ・Commercial use - OK
+ * ・Non-commercial use - OK
+ * ・Edits for your project needs - OK
+ * ・Redistribution - OK
+ * 
+ * This plugin is edited based in RPGMaker material.
+ * Please see the RPGMaker Term of Use.
+ *     https://tkool.jp/support/index.html
+ */
+
+/*:ja
+ * @plugindesc v1.30 戦闘中も確認できるモンスター図鑑です。属性、ステートの耐性の確認もできます。
  * @author ヱビ
  * 
  * @param ShowCommandInBattle
@@ -54,7 +735,7 @@
  * @value 1
  * @option OFF
  * @value 0
- * @desc ONにすると、図鑑で敵の現在の情報（現在HPなど）が見られます。
+ * @desc ONにすると、「図鑑」「敵の情報」で敵の現在の情報（現在HPなど）が見られます。
  * プラグインコマンドで変更することもできます。0:OFF、1:ON
  * @default 0
  * 
@@ -124,6 +805,12 @@
  * @text 未登録の敵のデータ名
  * @desc まだ図鑑に登録されていない敵キャラの各データの内容です。
  * @default ？？？
+ * 
+ * @param HitRateName
+ * @text 命中率名前
+ * @type string
+ * @desc 命中率を図鑑になんと表示しますか？
+ * @default 命中率
  * 
  * @param WeakElementName
  * @text 弱点属性の名前
@@ -311,11 +998,6 @@
  * @desc 図鑑に運を表示するか決めます。0:非表示、1:表示
  * @default 1
  * 
- * @param HitRateName
- * @text 命中率名前
- * @type string
- * @desc 命中率を図鑑になんと表示しますか？
- * @default 命中率
  * 
  * @param DispHitRate
  * @text 命中率表示
@@ -325,6 +1007,12 @@
  * @option 非表示
  * @value 0
  * @desc 図鑑に命中率を表示するか決めます。0:非表示、1:表示
+ * @default 0
+ * 
+ * @param DispSkillNumber
+ * @text スキル表示数
+ * @type number
+ * @desc スキルの表示数を決めます。
  * @default 0
  * 
  * @param DispDropItems
@@ -449,6 +1137,7 @@
  * ★レベル（メモ欄で設定）
  * ★その敵を倒した数
  * ・HP、MP、攻撃力、防御力、魔法力、魔法防御、敏捷性、運
+ * ★スキル -v1.30
  * ・ドロップアイテム
  * ★効きやすい属性、効きにくい属性
  * ★効きやすいステート、効きにくい（無効含む）ステート、効かないステート
@@ -456,7 +1145,7 @@
  * ★図鑑の達成率
  * 
  * ============================================================================
- * 4つの使い方
+ * 4つの表示方法
  * ============================================================================
  * 
  * １．図鑑
@@ -465,11 +1154,13 @@
  * 
  * ２．バトル中の敵のステータス一覧
  * 表示：バトル中の敵のリスト。HPゲージなど、現在のステータス
- * 操作：戦闘中に「敵の情報」コマンド。現在の情報を見る設定がONになっているとき
+ * 操作：戦闘中に「敵の情報」コマンド。
+ * 設定：「「図鑑」で現在のステータスを表示」がONになっているとき
  * 
  * ３．バトル中の敵の図鑑の情報
  * 表示：バトル中の敵のリスト。現在のステータスではなく、図鑑の情報
- * 操作：戦闘中に「敵の情報」コマンド。現在の情報を見る設定がOFFになっているとき
+ * 操作：戦闘中に「敵の情報」コマンド。
+ * 設定：「「図鑑」で現在のステータスを表示」がOFFになっているとき
  * 
  * ４．チェック
  * 表示：チェックした敵の現在のステータス
@@ -478,7 +1169,7 @@
  * ５．チェック（一般データ） - v1.24
  * 表示：チェックした敵の一般データ
  * 操作：チェックスキルを敵に対して使用。
- *       ShowGeneralStatusInSkillがＯＮになっているとき。
+ * 設定：「「チェック」で一般的なステータスを表示」がＯＮになっているとき。
  * 
  * ============================================================================
  * とりあえずの導入方法
@@ -510,14 +1201,14 @@
  * 〇未確認の敵キャラ「？？？」
  * 
  * まだ図鑑に登録されていない敵との戦闘中に図鑑を開くと、データが「？？？」と
- * 表示されます。「？？？」の部分はプラグインパラメータの UnknownDataで設定
- * できます。 
+ * 表示されます。「？？？」の部分はプラグインパラメータの「未登録の敵の索引名」
+ * で設定できます。 
  * 
  * 〇現在の情報を見る設定・敵の情報コマンド
  * 
  * デフォルトでは敵の情報コマンドでは、一般的な敵のデータが出るようになっていま
  * す。
- * プラグインパラメータShowCurrentStatus を ON にすると、
+ * プラグインパラメータ「「図鑑」で現在のステータスを表示」 を ON にすると、
  * 戦闘中に敵の情報を開いたとき、現在の敵キャラのパラメータが表示されます。
  * 現在HPだけでなく、攻撃力や属性有効度の変化も表示されます。
  * 現在の情報を見る設定は、プラグインコマンドで変更できます。
@@ -525,12 +1216,12 @@
  * 〇現在の情報を見る設定・チェックスキル - v1.24
  * 
  * デフォルトではチェックスキルでは現在の敵のデータが出るようになっています。
- * プラグインパラメータShowGeneralStatusInSkillをＯＮにすると、スキルでチェック
- * したときも、一般的な敵のデータを表示するようにできます。
+ * プラグインパラメータ「「チェック」で一般的なステータスを表示」をＯＮにすると、
+ * スキルでチェックしたときも、一般的な敵のデータを表示するようにできます。
  * 
  * 〇図鑑に登録されるタイミング
  * 
- * プラグインパラメータ ResisterTiming で、図鑑に登録されるタイミングを設定でき
+ * プラグインパラメータ「登録タイミング」で、図鑑に登録されるタイミングを設定でき
  * ます。
  * 
  * 0: 登録されない
@@ -538,8 +1229,8 @@
  * 2: 戦闘終了時
  * 
  * 〇ゲットしていないアイテムを？？？にする - v1.22
- * プラグインパラメータHideItemUntilGetをONにすると、ゲットしていないアイテムを
- * ？？？と表示します。
+ * プラグインパラメータ「手に入れるまでドロップアイテムを隠す」をONにすると、
+ * ゲットしていないアイテムを？？？と表示します。
  * 
  * ============================================================================
  * プラグインコマンド
@@ -666,6 +1357,13 @@
  * ============================================================================
  * 更新履歴
  * ============================================================================
+ * 
+ * Version 1.30
+ *   英訳しました。
+ *   敵の情報コマンド使用後にチェックスキルを使用した時、チェックした後戦闘が
+ *   進行しなくなる不具合を直しました。
+ *   プラグインパラメータ「スキル表示数」でスキルを表示できるようにしました。
+ *   
  * 
  * Version 1.29
  *   図鑑一覧で左キーで上に、右キーで下に表示個数分移動するようにしました。
@@ -817,9 +1515,8 @@
  * ・アダルトゲーム、残酷なゲームでの使用も可
  * ・ツクール素材の改変素材です
  *     ツクール公式の利用規約をご覧ください。
- *     https://tkool.jp/support/guideline
+ *     https://tkool.jp/support/index.html
  */
-
 
 (function() {
 	var parameters = PluginManager.parameters('AB_EnemyBook');
@@ -866,7 +1563,10 @@
 	dispParameters[7] = (parameters['DispLUK'] == 1) ? true : false;
 	var dispTP = (parameters['DispTP'] == 1) ? true : false;
 	var dispHitRate = (parameters['DispHitRate'] == 1) ? true : false;
-	var HitRateName = String(parameters['HitRateName'] || "命中率");
+
+	var DispSkillNumber = Number(parameters['DispSkillNumber'] || "命中率");
+
+	var DescribeLineNumber = Number(parameters['DescribeLineNumber']);
 
 	var DispDropItems = (parameters['DispDropItems'] == 1) ? true : false;
 	var dispRates = [];
@@ -1301,7 +2001,7 @@
 		this._enemyBookIndexWindow.close();
 		this._enemyBookStatusWindow.close();
 		this._enemyBookIndexWindow.deselect();
-
+		
 		// v1.28
 		if (AB_EnemyBook.backWindow == 'actor_command') {
 			this._actorCommandWindow.activate();
@@ -1369,6 +2069,9 @@
 				linePlus += 0.5;
 			}
 		}
+		// v1.30
+		linePlus += DispSkillNumber;
+
 		linePlus = Math.ceil(linePlus) * 2;
 
 		if (DispDescribe) {
@@ -1389,6 +2092,9 @@
 				linePlus++;
 			}
 		}
+		// v1.30
+		linePlus += DispSkillNumber;
+		
 		if (DispDefeatNumber) linePlus++;
 		if (DispLv) linePlus++;
 		if (dispTP) linePlus++;
@@ -1488,6 +2194,9 @@
 
 	Window_EnemyBookIndex.prototype.setupWhenCheck = function() {
 		this.refresh();
+		// 1.30
+		this._statusWindow.isCheck = true;
+		AB_EnemyBook.backWindow = 'check';
 				// v1.17
 		// setupWhenCheckがいつ呼ばれるかによっては図鑑を開いたときでも
 		// 初期カーソルが0になってしまう恐れ
@@ -1751,16 +2460,19 @@ Window_Selectable.prototype.processCancel = function() {
 		//var mY = 0;
 		var lineHeight = this.lineHeight();
 
+
 		this.contents.clear();
 
+
+		var isHideStatus = this.isHideStatus(enemy);
+		var isCurrentStatus = this.isCurrentStatus(enemy);
+
 				// v1.17
-		if (!enemy || (this.isAllEnemies && !$gameSystem.isInEnemyBook(enemy.enemy()))) {
+		if (!enemy) {
 			this._enemySprite.bitmap = null;
 			return;
 		}
 
-		
-		var isUnknownEnemy = (!$gameSystem.isInEnemyBook(enemy.enemy()) && (!this.isCheck || HideUnknownStatusInSkill));
 		var dataEnemy = enemy.enemy();
 
 		var name = enemy.battlerName();
@@ -1849,8 +2561,8 @@ Window_Selectable.prototype.processCancel = function() {
 
 		for (var i = 0; i < 8; i++) {
 			// v1.25 drawTP
-			if (i == 2 && dispTP && !this.isAllEnemies && ($gameSystem.isShowCurrentEnemysStatus() || this.isCheck) && !ShowGeneralStatusInSkill) {
-				if (!isUnknownEnemy) {
+			if (i == 2 && dispTP && isCurrentStatus) {
+				if (!isHideStatus) {
 					this.drawActorTp(enemy, x, y, 220);
 				}	else {
 					this.changeTextColor(this.systemColor());
@@ -1873,8 +2585,8 @@ Window_Selectable.prototype.processCancel = function() {
 			}
 			if (dispParameters[i]) {
 				// v1.17
-				if (i == 0 && !this.isAllEnemies && ($gameSystem.isShowCurrentEnemysStatus() || this.isCheck) && !ShowGeneralStatusInSkill) {
-					if (!isUnknownEnemy) {
+				if (i == 0 && !this.isAllEnemies && isCurrentStatus) {
+					if (!isHideStatus) {
 						this.drawActorHp(enemy, x, y, 220);
 					}	else {
 						this.changeTextColor(this.systemColor());
@@ -1883,8 +2595,8 @@ Window_Selectable.prototype.processCancel = function() {
 						this.drawText(UnknownData, x + w, y, w, 'right');
 					}
 				// v1.17
-				} else if (i == 1 && !this.isAllEnemies && ($gameSystem.isShowCurrentEnemysStatus() || this.isCheck) && !ShowGeneralStatusInSkill) {
-					if (!isUnknownEnemy) {
+				} else if (i == 1 && !this.isAllEnemies && (isCurrentStatus)) {
+					if (!isHideStatus) {
 						this.drawActorMp(enemy, x, y, 220);
 					}	else {
 						this.changeTextColor(this.systemColor());
@@ -1896,7 +2608,7 @@ Window_Selectable.prototype.processCancel = function() {
 					this.changeTextColor(this.systemColor());
 					this.drawText(TextManager.param(i), x, y, w);
 					this.resetTextColor();
-					if (!isUnknownEnemy) {
+					if (!isHideStatus) {
 						this.drawText(enemy.param(i), x + w, y, w, 'right');
 					} else {
 						this.drawText(UnknownData, x + w, y, w, 'right');
@@ -1905,17 +2617,34 @@ Window_Selectable.prototype.processCancel = function() {
 				y += lineHeight;
 			}
 		}
+
+
 		if (dispHitRate) {
 			this.changeTextColor(this.systemColor());
 			this.drawText(HitRateName, x, y, w);
 			this.resetTextColor();
-			if (!isUnknownEnemy) {
+			if (!isHideStatus) {
 				this.drawText((enemy.xparam(0)*100), x + w, y, w, 'right');
 			} else {
 				this.drawText(UnknownData, x + w, y, w, 'right');
 			}
 			y += lineHeight;
 			
+		}
+
+		// v1.30
+		for (var i=0; i<DispSkillNumber; i++) {
+			var action = dataEnemy.actions[i];
+			if (action) {
+				if (!isHideStatus) {
+					this.drawItemName($dataSkills[action.skillId], x, y, columnWidth);
+					y += lineHeight;
+				} else {
+					this.drawText(UnknownData, x, y, columnWidth);
+					y += lineHeight;
+				
+				}
+			}
 		}
 		var maxY = y;
 	
@@ -1938,7 +2667,7 @@ Window_Selectable.prototype.processCancel = function() {
 			for (var i = 0, l = dataEnemy.dropItems.length; i < l; i++) {
 				var di = dataEnemy.dropItems[i];
 				if (di.kind > 0) {
-					if (!isUnknownEnemy && $gameSystem.getEnemyDropGot(enemy._enemyId, i)) {
+					if (!isHideStatus && $gameSystem.getEnemyDropGot(enemy._enemyId, i)) {
 						var item = enemy.itemObject(di.kind, di.dataId);
 						this.drawItemName(item, x, y, columnWidth);
 					} else {
@@ -1990,7 +2719,7 @@ Window_Selectable.prototype.processCancel = function() {
 			y += lineHeight * 2 + this.textPadding();
 		x = 0;
 		
-		if (!isUnknownEnemy && DispDescribe) {
+		if (!isHideStatus && DispDescribe) {
 			for (var i = 1; i <= DescribeLineNumber; i++) {
 				this.drawTextEx(dataEnemy.meta["desc"+i], x, y + lineHeight * (i-1));
 			}
@@ -2107,6 +2836,7 @@ Window_Selectable.prototype.processCancel = function() {
 			this.drawText(UnknownData, x, y);
 		}
 	};
+
 	Window_EnemyBookStatus.prototype.drawWeakStates = function(x, y, w) {
 		var enemy = this._enemy;
 		var icons = [];
@@ -2138,6 +2868,16 @@ Window_Selectable.prototype.processCancel = function() {
 			this.resetTextColor();
 			this.drawText(UnknownData, x, y);
 		}
+	};
+
+	Window_EnemyBookStatus.prototype.isHideStatus = function(enemy) {
+		if (!enemy) return true;
+		return !($gameSystem.isInEnemyBook(enemy.enemy()) || (this.isCheck && !HideUnknownStatusInSkill));
+	};
+
+	Window_EnemyBookStatus.prototype.isCurrentStatus = function(enemy) {
+		if (!enemy) return false;
+		return !this.isAllEnemies && ($gameSystem.isShowCurrentEnemysStatus() || this.isCheck) && !ShowGeneralStatusInSkill;
 	};
 
 	Window_EnemyBookStatus.prototype.drawNoEffectStates = function(x, y, w) {
@@ -2307,7 +3047,7 @@ Window_Selectable.prototype.processCancel = function() {
     };
 
 // Window_ActorCommand-----------------------------------
- 
+
     Window_ActorCommand.prototype.processAB_EnemyBook = function () {
         if (!$gameParty.inBattle()) return;
         this.playOkSound();
