@@ -1,6 +1,6 @@
 ﻿// =============================================================================
 // AB_EnemyBook.js
-// Version: 1.32
+// Version: 1.33
 // -----------------------------------------------------------------------------
 // [Homepage]: ヱビのノート
 //             http://www.zf.em-net.ne.jp/~ebi-games/
@@ -9,7 +9,7 @@
 
 
 /*:
- * @plugindesc v1.32 Displays detailed statuses of enemies.
+ * @plugindesc v1.33 Displays detailed statuses of enemies.
  * Includes element rates, state rates etc.
  * @author ヱビ
  * 
@@ -99,6 +99,12 @@
  * @type file
  * @dir img/parallaxes
  * @desc This is the Background image.
+ * 
+ * @param BackgroundImageOpacity
+ * @text Background Image Opacity
+ * @type number
+ * @desc This is the Background image opacity.(0~255)
+ * @default 120
  * 
  * @param SpreadBackgroundImage
  * @text Spread Background Image
@@ -679,6 +685,9 @@
  * Update Log
  * ============================================================================
  * 
+ * Version 1.33
+ *   Change to be able to change background image opacity by setting plugin
+ *   parameter.
  * 
  * Version 1.32
  *   Change to be able to display background image by setting plugin parameter.
@@ -705,7 +714,7 @@
  */
 
 /*:ja
- * @plugindesc v1.32 戦闘中も確認できるモンスター図鑑です。属性、ステートの耐性の確認もできます。
+ * @plugindesc v1.33 戦闘中も確認できるモンスター図鑑です。属性、ステートの耐性の確認もできます。
  * @author ヱビ
  * 
  * @param ShowCommandInBattle
@@ -802,6 +811,12 @@
  * @type boolean
  * @desc ＯＮにすると、チェックスキルのときウィンドウが画面いっぱいに広がります。
  * @default false
+ * 
+ * @param BackgroundImageOpacity
+ * @text 背景画像不透明度
+ * @type number
+ * @desc 背景画像の不透明度です。（０～２５５）
+ * @default 120
  * 
  * 
  * 
@@ -1385,6 +1400,9 @@
  * 更新履歴
  * ============================================================================
  * 
+ * Version 1.33
+ *   プラグインパラメータで背景画像の不透明度を設定できるようにしました。
+ * 
  * Version 1.32
  *   プラグインパラメータで背景画像を指定できるようにしました。
  * 
@@ -1566,6 +1584,7 @@
 
 	// v1.32
 	var BackgroundImage = String(parameters['BackgroundImage']);
+	var BackgroundImageOpacity = Number(parameters['BackgroundImageOpacity']);
 	var SpreadBackgroundImage = eval(parameters['SpreadBackgroundImage']);
 
 	// v1.28
@@ -2409,7 +2428,7 @@ Window_Selectable.prototype.processCancel = function() {
 				if (BackgroundImage) {
 					this._backgroundSprite = new Sprite();
 			    this._backgroundSprite.bitmap = ImageManager.loadParallax(BackgroundImage);
-					this._backgroundSprite.opacity = 120;
+					this._backgroundSprite.opacity = BackgroundImageOpacity;
 			    this.addChildToBack(this._backgroundSprite);
 					
 					var bsw = SpreadBackgroundImage ? Graphics.boxWidth : width;
@@ -3285,7 +3304,7 @@ Window_EnemyBookIndex.prototype.updateBackOpacity = function() {
 				this.opacity = 0;
 				this._backgroundSprite = new Sprite();
 		    this._backgroundSprite.bitmap = ImageManager.loadParallax(BackgroundImage);
-				this._backgroundSprite.opacity = 120;
+				this._backgroundSprite.opacity = BackgroundImageOpacity;
 		    this.addChildToBack(this._backgroundSprite);
 				
 		}
@@ -3301,7 +3320,7 @@ Window_EnemyBookPercent.prototype.updateBackOpacity = function() {
 				this.opacity = 0;
 				this._backgroundSprite = new Sprite();
 		    this._backgroundSprite.bitmap = ImageManager.loadParallax(BackgroundImage);
-				this._backgroundSprite.opacity = 120;
+				this._backgroundSprite.opacity = BackgroundImageOpacity;
 		    this.addChildToBack(this._backgroundSprite);
 		}
 };
