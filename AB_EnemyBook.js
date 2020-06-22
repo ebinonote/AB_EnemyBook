@@ -1,6 +1,6 @@
 ﻿// =============================================================================
 // AB_EnemyBook.js
-// Version: 1.06
+// Version: 1.07
 // -----------------------------------------------------------------------------
 // [Homepage]: ヱビのノート
 //             http://www.zf.em-net.ne.jp/~ebi-games/
@@ -8,7 +8,7 @@
 
 
 /*:
- * @plugindesc v1.06 戦闘中も確認できるモンスター図鑑です。属性、ステートの耐性の確認もできます。
+ * @plugindesc v1.07 戦闘中も確認できるモンスター図鑑です。属性、ステートの耐性の確認もできます。
  * @author ヱビ
  * 
  * @param ShowCommandInBattle
@@ -95,7 +95,16 @@
  * @param DispNo
  * @desc 図鑑に番号を表示するか決めます。0:非表示、1:表示
  * @default 1
- *
+ * 
+ * @param DispLv
+ * @desc 図鑑にレベルを表示するか決めます。0:非表示、1:表示
+ * @default 1
+ * 
+ * @param DispDefeatNumber
+ * @desc 図鑑にその敵を倒した数を表示するか決めます。
+ * 0:非表示、1:表示
+ * @default 1
+ * 
  * @param DispHP
  * @desc 図鑑にHPを表示するか決めます。0:非表示、1:表示
  * @default 1
@@ -160,11 +169,6 @@
  * 0:非表示、1:表示
  * @default 1
  * 
- * @param DispDefeatNumber
- * @desc 図鑑にその敵を倒した数を表示するか決めます。
- * 0:非表示、1:表示
- * @default 1
- * 
  * @param ---属性アイコン---
  * @default 
  * 
@@ -190,12 +194,16 @@
  * 表示されるもの
  * ============================================================================
  * 
- * 以下のものはプラグインパラメータで表示するかどうか設定できます。
+ * 図鑑で表示できるものは以下です。プラグインパラメータで表示するかしないかを設
+ * 定できます。
+ * ・敵の番号
+ * ・レベル（メモ欄）
+ * ・その敵を倒した数
  * ・HP、MP、攻撃力、防御力、魔法力、魔法防御、敏捷性、運
  * ・ドロップアイテム
  * ・効きやすい属性、効きにくい属性
  * ・効きやすいステート、効きにくい（無効含む）ステート、効かないステート
- * ・その敵を倒した数
+ * ・説明文（メモ欄）
  * 
  * 属性を表示するときは、2通りの方法があります。
  * 
@@ -319,6 +327,10 @@
  * 更新履歴
  * ============================================================================
  * 
+ * Version 1.07
+ *   プラグインパラメータDispLvでレベルを表示するかどうか選べるようにし、倒した
+ *   数をレベルの次に表示するようにしました。
+ * 
  * Version 1.06
  *   プラグインコマンドを4種追加しました。図鑑の達成率、登録数、敵キャラが登録さ
  *   れているかどうか、敵キャラを何体倒したかの4種を取得できます。
@@ -379,6 +391,7 @@
 	var FailToAddEnemySkillMessage = String(parameters['FailToAddEnemySkillMessage'] || "");
 	var FailToCheckEnemySkillMessage = String(parameters['FailToCheckEnemySkillMessage'] || "");
 	var DispNo = (parameters['DispNo'] == 1) ? true : false;
+	var DispLv = (parameters['DispLv'] == 1) ? true : false;
 	var dispParameters = [];
 	dispParameters[0] = (parameters['DispHP'] == 1) ? true : false;
 	dispParameters[1] = (parameters['DispMP'] == 1) ? true : false;
@@ -757,7 +770,6 @@
 		this._indexWindow.setHandler('cancel', this.popScene.bind(this));
 		var wx = this._indexWindow.width;
 		var ww = Graphics.boxWidth - wx;
-		//var wh = Graphics.boxHeight;
 		var wh = this.calcStatusWindowHeight();
 		this._statusWindow = new Window_EnemyBookStatus(wx, 0, ww, wh);
 		this.addWindow(this._percentWindow);
@@ -773,7 +785,6 @@
 		var textPadding = Window_Base.prototype.textPadding();
 		var standardPadding = Window_Base.prototype.standardPadding();
 		var paramHeight = Scene_EnemyBook.prototype.calcParameterHeight();
-		//var height = lineHeight * 9 + textPadding * 2 + standardPadding * 2;
 		var height = paramHeight + standardPadding * 2;
 		var linePlus = 0;
 		for (var i = 0; i < 5; i++) {
@@ -795,15 +806,15 @@
 		var textPadding = Window_Base.prototype.textPadding();
 		var standardPadding = Window_Base.prototype.standardPadding();
 		var height = 0;
-		var linePlus = 1;
+		var linePlus = 0;
 		for (var i = 0; i < 8; i++) {
 			if (dispParameters[i]) {
 				linePlus++;
 			}
 		}
 		if (DispDefeatNumber) linePlus++;
+		if (DispLv) linePlus++;
 		linePlus = Math.max(linePlus, DispDropItems ? 9 : 6);
-		linePlus = Math.max(linePlus, 6);
 		height = lineHeight * linePlus + textPadding * 2;
 
 		return height;
@@ -914,13 +925,6 @@
 
 	Window_EnemyBookIndex.prototype.updatePercent = function() {
 		if (this._percentWindow && this._list) {
-			/*var a = 0;
-			for (var i = 1; i < $dataEnemies.length; i++) {
-				var enemy = $dataEnemies[i];
-				if (enemy.name && enemy.meta.book !== 'no') {
-					if ($gameSystem.isInEnemyBook(enemy)) a++;
-				}
-			}*/
 			var a = $gameSystem.getRegisterNumber();
 			this._percentWindow.setAchievement(this._list.length, a);
 		}
@@ -1090,14 +1094,23 @@
 		this.resetTextColor();
 		this.drawText(enemy.name(), x, y, columnWidth);
 
-		if (dataEnemy.meta.bookLevel) {
-			x = column2x;
+		x = column2x;
+
+		if (dataEnemy.meta.bookLevel && DispLv) {
 			this.resetTextColor();
 			this.drawText(TextManager.levelA + " " + dataEnemy.meta.bookLevel, x, y);
 		}
 
-		x = column2x;
-		y = lineHeight + this.textPadding();
+
+		if (DispLv) y += lineHeight;
+		if (DispDefeatNumber) {
+			this.resetTextColor();
+			this.drawText(DefeatNumberName, x, y, w);
+			this.drawText($gameSystem.defeatNumber(enemy.enemyId()), x + w, y, w , 'right');
+			y += lineHeight;
+		}
+
+		if (y != 0) y += this.textPadding();
 
 		for (var i = 0; i < 8; i++) {
 			if (dispParameters[i]) {
@@ -1132,7 +1145,7 @@
 				y += lineHeight;
 			}
 		}
-
+/*
 		if (DispDefeatNumber) {
 			this.resetTextColor();
 			this.changeTextColor(this.systemColor());
@@ -1141,7 +1154,7 @@
 			this.drawText($gameSystem.defeatNumber(enemy.enemyId()), x + w, y, w , 'right');
 			y += lineHeight;
 		}
-
+*/
 		//mY = y;
 
 		x = column1x;
