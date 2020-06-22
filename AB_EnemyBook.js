@@ -1,6 +1,6 @@
 ﻿// =============================================================================
 // AB_EnemyBook.js
-// Version: 1.07
+// Version: 1.10
 // -----------------------------------------------------------------------------
 // [Homepage]: ヱビのノート
 //             http://www.zf.em-net.ne.jp/~ebi-games/
@@ -8,7 +8,7 @@
 
 
 /*:
- * @plugindesc v1.07 戦闘中も確認できるモンスター図鑑です。属性、ステートの耐性の確認もできます。
+ * @plugindesc v1.10 戦闘中も確認できるモンスター図鑑です。属性、ステートの耐性の確認もできます。
  * @author ヱビ
  * 
  * @param ShowCommandInBattle
@@ -327,6 +327,18 @@
  * 更新履歴
  * ============================================================================
  * 
+ * Version 1.10
+ *   ツクールのデータベースの用語で、HPやMPに「体力」などの日本語を使ったとき、
+ *   文字が重なってしまうバグを修正しました。
+ * 
+ * Version 1.09
+ *   プラグインパラメータShowCurrentStatusの設定が反映されないバグを修正しまし
+ *   た。
+ * 
+ * Version 1.08
+ *   YEP_X_AnimatedSVEnemies.jsを使っているとき、アクターが表示されるようにしま
+ *   した。
+ * 
  * Version 1.07
  *   プラグインパラメータDispLvでレベルを表示するかどうか選べるようにし、倒した
  *   数をレベルの次に表示するようにしました。
@@ -484,7 +496,7 @@
 
 	Game_System.prototype.initEnemyBookSettings = function() {
 		this._showBattleEnemyBook = ShowCommandInBattle;
-		this._currentEnemysStatus = ShowCurrentStatus;
+		this._showCurrentEnemyStatus = ShowCurrentStatus;
 	};
 
 	Game_System.prototype.setShowBattleEnemyBook = function(value) {
@@ -1045,6 +1057,8 @@
 		}
 	};
 
+// refresh に移動
+/*
 	Window_EnemyBookStatus.prototype.update = function() {
 		Window_Base.prototype.update.call(this);
 		if (this._enemySprite.bitmap) {
@@ -1058,7 +1072,7 @@
 			this._enemySprite.scale.y = scale;
 		}
 	};
-
+*/
 	Window_EnemyBookStatus.prototype.refresh = function() {
 		var enemy = this._enemy;
 		var column1x = 0;
@@ -1083,13 +1097,55 @@
 
 		var name = enemy.battlerName();
 		var hue = enemy.battlerHue();
+
 		var bitmap;
+		this._enemySprite.scale.x = 1;
+		this._enemySprite.scale.y = 1;
 		if ($gameSystem.isSideView()) {
-			bitmap = ImageManager.loadSvEnemy(name, hue);
+			// YEP_X_AnimatedSVEnemiesへの対応（v1.08）
+			if (Imported.YEP_X_AnimatedSVEnemies && dataEnemy.sideviewBattler[0]) {
+				name = Yanfly.Util.getRandomElement(dataEnemy.sideviewBattler);
+				bitmap = ImageManager.loadSvActor(name);
+				var motionIndex = 0;
+				var pattern = 1;
+				var cw = bitmap.width / 9;
+				var ch = bitmap.height / 6;
+				var cx = Math.floor(motionIndex / 6) * 3 + pattern;
+				var cy = motionIndex % 6;
+				this._enemySprite.bitmap = bitmap;
+				this._enemySprite.setFrame(cx * cw, cy * ch, cw, ch);
+
+			} else {
+				bitmap = ImageManager.loadSvEnemy(name, hue);
+				var cw = bitmap.width;
+				var ch = bitmap.height;
+				var cx = 0;
+				var cy = 0;
+				this._enemySprite.bitmap = bitmap;
+				this._enemySprite.setFrame(cx * cw, cy * ch, cw, ch);
+			}
 		} else {
 			bitmap = ImageManager.loadEnemy(name, hue);
+			var cw = bitmap.width;
+			var ch = bitmap.height;
+			var cx = 0;
+			var cy = 0;
+			this._enemySprite.bitmap = bitmap;
+			this._enemySprite.setFrame(cx * cw, cy * ch, cw, ch);
 		}
-		this._enemySprite.bitmap = bitmap;
+
+
+		if (this._enemySprite.bitmap) {
+			//var bitmapWidth = this._enemySprite.bitmap.width;
+			var bitmapWidth = cw;
+			var contentsWidth = this.contents.width;
+			var scale = 1;
+			if (bitmapWidth > contentsWidth / 2) {
+				scale = contentsWidth / bitmapWidth / 2;
+			}
+			this._enemySprite.scale.x = scale;
+			this._enemySprite.scale.y = scale;
+		}
 
 		this.resetTextColor();
 		this.drawText(enemy.name(), x, y, columnWidth);
@@ -1115,20 +1171,20 @@
 		for (var i = 0; i < 8; i++) {
 			if (dispParameters[i]) {
 				if (i == 0 && $gameTroop.inBattle() && ($gameSystem.isShowCurrentEnemysStatus() || this.isCheck)) {
-					this.changeTextColor(this.systemColor());
-					this.drawText(TextManager.hpA, x, y, 60);
 					if (!isUnknownEnemy) {
 						this.drawActorHp(enemy, x, y, 220);
 					}	else {
+						this.changeTextColor(this.systemColor());
+						this.drawText(TextManager.hpA, x, y, 60);
 						this.resetTextColor();
 						this.drawText(UnknownData, x + w, y, w, 'right');
 					}
 				} else if (i == 1 && $gameTroop.inBattle() && ($gameSystem.isShowCurrentEnemysStatus() || this.isCheck)) {
-					this.changeTextColor(this.systemColor());
-					this.drawText(TextManager.mpA, x, y, 60);
 					if (!isUnknownEnemy) {
 						this.drawActorMp(enemy, x, y, 220);
 					}	else {
+						this.changeTextColor(this.systemColor());
+						this.drawText(TextManager.mpA, x, y, 60);
 						this.resetTextColor();
 						this.drawText(UnknownData, x + w, y, w, 'right');
 					}
