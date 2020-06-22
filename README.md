@@ -375,3 +375,6 @@ EnemyBook clearEnemyDrop
     ツクール公式の利用規約をご覧ください。  
     <https://tkool.jp/support/index.html>
 
+## License
+
+MIT
