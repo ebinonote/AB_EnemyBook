@@ -1,6 +1,6 @@
 ﻿// =============================================================================
 // AB_EnemyBook.js
-// Version: 1.01
+// Version: 1.02
 // -----------------------------------------------------------------------------
 // [Homepage]: ヱビのノート
 //             http://www.zf.em-net.ne.jp/~ebi-games/
@@ -54,8 +54,12 @@
  * @default 弱点ステート
  * 
  * @param ResistStateName
- * @desc 効きにくいステートの名前です。
+ * @desc 効きにくいステートの名前です。無効ステートも含みます。
  * @default 耐性ステート
+ * 
+ * @param NoEffectStateName
+ * @desc 効かないステートの名前です。
+ * @default 無効ステート
  * 
  * @param UnknownDropItemIcon
  * @desc 未知の敵キャラの落とすアイテムのアイコンの番号です。
@@ -130,9 +134,14 @@
  * @default 1
  * 
  * @param DispResistState
- * @desc 図鑑に効きにくいステートを表示するか決めます。
+ * @desc 図鑑に効きにくいステートを表示するか決めます。（無効含む）
  * 0:非表示、1:表示
  * @default 1
+ * 
+ * @param DispNoEffectState
+ * @desc 図鑑に効かないステートを表示するか決めます。
+ * 0:非表示、1:表示
+ * @default 0
  * 
  * @param DispDescribe
  * @desc 図鑑に敵キャラの説明を表示するか決めます。
@@ -155,7 +164,7 @@
  * ・HP、MP、攻撃力、防御力、魔法力、魔法防御、敏捷性、運
  * ・ドロップアイテム
  * ・効きやすい属性、効きにくい属性
- * ・効きやすいステート、効きにくいステート
+ * ・効きやすいステート、効きにくい（無効含む）ステート、効かないステート
  * 
  * 属性を表示するときは、属性の名前の中にアイコンを入れておく必要があります。
  * 例：\i[64]炎
@@ -171,6 +180,8 @@
  * 
  * 他にも、後述の目安となるレベルを敵キャラのメモ欄で設定した場合、表示されます。
  * 
+ * Version 1.02からは全ての項目を表示すると画面をはみ出してしまうので、
+ * プラグインパラメータでどの項目を表示するか設定してください。
  * 
  * ============================================================================
  * 図鑑に登録されるタイミング
@@ -255,6 +266,10 @@
  * 更新履歴
  * ============================================================================
  * 
+ * Version 1.02
+ *   無効ステートの項目を追加しました。
+ *   耐性の項目が奇数のとき、図鑑説明がかぶってしまう不具合を修正しました。
+ * 
  * Version 1.01
  *   表示項目によって余白を削り、ウィンドウの高さを小さくするようにしました。
  *   高さを計算するために、説明を表示するかどうかを設定するプラグインパラメータ
@@ -309,6 +324,8 @@
 	var ResistStateName = String(parameters['ResistStateName'] || "耐性ステート");
 	dispRates[2] = (parameters['DispWeakState'] == 1) ? true : false;
 	var WeakStateName = String(parameters['WeakStateName'] || "弱点ステート");
+	dispRates[4] = (parameters['DispNoEffectState'] == 1) ? true : false;
+	var NoEffectStateName = String(parameters['NoEffectStateName'] || "無効ステート");
 	var UnknownDropItemIcon = Number(parameters['UnknownDropItemIcon']);
 	if (UnknownDropItemIcon === Number.NaN) UnknownDropItemIcon = 0;
 	var ShowCurrentStatus = (parameters['ShowCurrentStatus'] == 1) ? true : false;
@@ -591,7 +608,7 @@
 		//var height = lineHeight * 9 + textPadding * 2 + standardPadding * 2;
 		var height = paramHeight + standardPadding * 2;
 		var linePlus = 0;
-		for (var i = 0; i < 4; i++) {
+		for (var i = 0; i < 5; i++) {
 			if (dispRates[i]) {
 				linePlus += 0.5;
 			}
@@ -906,7 +923,7 @@
 		y = Scene_EnemyBook.prototype.calcParameterHeight();
 		var j = 0;
 
-		for (var i = 0; i < 4; i++) {
+		for (var i = 0; i < 5; i++) {
 			if (dispRates[i]) {
 				switch(i) {
 				case 0:
@@ -921,6 +938,9 @@
 				case 3:
 					this.drawResistStates(x, y, columnWidth);
 					break;
+				case 4:
+					this.drawNoEffectStates(x, y, columnWidth);
+					break;
 				}
 				j++;
 				if (j % 2 == 1) {
@@ -931,6 +951,8 @@
 				}
 			}
 		}
+		if (x == column2x) 
+			y += lineHeight * 2 + this.textPadding();
 		x = 0;
 		
 		if (!isUnknownEnemy && DispDescribe) {
@@ -1076,6 +1098,38 @@
 		}
 	};
 
+	Window_EnemyBookStatus.prototype.drawNoEffectStates = function(x, y, w) {
+		var enemy = this._enemy;
+		var icons = [];
+		var iconWidth = 32;
+		var dx = 32;
+		for (var i=1,l=$dataStates.length; i<l; i++) {
+			var rate = enemy.stateRate(i);
+			if ((rate <= 0 || enemy.isStateResist(i))&& $dataStates[i].meta.book !== "no") {
+				var icon = $dataStates[i].iconIndex;
+				if (icon) icons.push(icon);
+			}
+		}
+
+		
+		this.changeTextColor(this.systemColor());
+		this.drawText(NoEffectStateName, x, y, w);
+
+		if (iconWidth * icons.length > w) {
+			dx = Math.floor(w / icons.length);
+		}
+		y+= this.lineHeight();
+		
+		if ($gameSystem.isInEnemyBook(enemy.enemy()) || this.isCheck) {
+			for (var i=0,l=icons.length; i<l; i++) {
+				this.drawIcon(icons[i], x, y);
+				x += dx;
+			}
+		} else {
+			this.resetTextColor();
+			this.drawText(UnknownData, x, y);
+		}
+	};
 //=============================================================================
 // Game_Action
 //=============================================================================
