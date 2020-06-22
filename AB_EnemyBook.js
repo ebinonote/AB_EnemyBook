@@ -1,6 +1,6 @@
 ﻿// =============================================================================
 // AB_EnemyBook.js
-// Version: 1.27
+// Version: 1.29
 // -----------------------------------------------------------------------------
 // [Homepage]: ヱビのノート
 //             http://www.zf.em-net.ne.jp/~ebi-games/
@@ -9,7 +9,7 @@
 
 
 /*:
- * @plugindesc v1.27 戦闘中も確認できるモンスター図鑑です。属性、ステートの耐性の確認もできます。
+ * @plugindesc v1.29 戦闘中も確認できるモンスター図鑑です。属性、ステートの耐性の確認もできます。
  * @author ヱビ
  * 
  * @param ShowCommandInBattle
@@ -87,6 +87,15 @@
  * @value 0
  * @desc アイテムをゲットするまで表示しないようにします。0:OFF、1:ON
  * @default 0
+ * 
+ * @param ShortCutButtonName
+ * @text ショートカットボタンの名前
+ * @type string
+ * @desc 戦闘中に敵の情報をこのショートカットキーで
+ * 見られるようにします。
+ * @default shift
+ * 
+ * 
  * 
  * @param ---用語、アイコン---
  * @default 
@@ -658,6 +667,13 @@
  * 更新履歴
  * ============================================================================
  * 
+ * Version 1.29
+ *   図鑑一覧で左キーで上に、右キーで下に表示個数分移動するようにしました。
+ * 
+ * Version 1.28
+ *   戦闘中、ショートカットキーを登録すると敵の情報を呼び出せるようにしまし
+ *   た。（このアイデアをくださった方、そのときに実現できず申し訳ありません。）
+ * 
  * Version 1.27
  *   プラグインパラメータを日本語にしました。
  *   ドロップアイテムの個数によってその下の情報の表示位置が異なる問題を修正しま
@@ -817,6 +833,12 @@
 	var UnknownData = String(parameters['UnknownData'] || "");
 	var HideUnknownStatusInSkill = (parameters['HideUnknownStatusInSkill'] == 1) ? true : false;
 	var HideItemUntilGet = (parameters['HideItemUntilGet'] == 1) ? true : false;
+
+
+	// v1.28
+	var ShortCutButtonName = String(parameters['ShortCutButtonName']);
+
+
 	var ShowCommandInBattle = (parameters['ShowCommandInBattle'] == 1) ? true : false;
 	var ShowGeneralStatusInSkill = (parameters['ShowGeneralStatusInSkill'] == 1) ? true : false;
 	var AddEnemySkillMessage = String(parameters['AddEnemySkillMessage'] || "");
@@ -1247,16 +1269,22 @@
 	Scene_Battle.prototype.createPartyCommandWindow = function() {
 		Scene_Battle_prototype_createPartyCommandWindow.call(this);
 		var win = this._partyCommandWindow;
-		win.setHandler('enemybook', this.battleEnemyBook.bind(this));
+		win.setHandler('enemybook', this.battleEnemyBookByCommand.bind(this));
 		win.setHandler('allenemybook', this.allBattleEnemyBook.bind(this));
 	};
 
 	Scene_Battle.prototype.battleEnemyBook = function() {
 		// v1.17
+		
 		this._enemyBookStatusWindow.isAllEnemies = false;
 		this._enemyBookIndexWindow.isAllEnemies = false;
 		this._enemyBookStatusWindow.setup();
 		this._enemyBookIndexWindow.setup();
+	};
+	Scene_Battle.prototype.battleEnemyBookByCommand = function() {
+		// v1.17
+		AB_EnemyBook.backWindow = 'party_command';
+		this.battleEnemyBook();
 	};
 // v1.17
 	Scene_Battle.prototype.allBattleEnemyBook = function() {
@@ -1273,6 +1301,24 @@
 		this._enemyBookIndexWindow.close();
 		this._enemyBookStatusWindow.close();
 		this._enemyBookIndexWindow.deselect();
+
+		// v1.28
+		if (AB_EnemyBook.backWindow == 'actor_command') {
+			this._actorCommandWindow.activate();
+			//this._skillWindow.activate();
+		}
+		if (AB_EnemyBook.backWindow == 'party_command') {
+			this._partyCommandWindow.activate();
+			//this._skillWindow.activate();
+		}
+		if (AB_EnemyBook.backWindow == 'skill') {
+			this._actorCommandWindow.deactivate();
+			this._skillWindow.activate();
+		}
+		if (AB_EnemyBook.backWindow == 'item') {
+			this._actorCommandWindow.deactivate();
+			this._itemWindow.activate();
+		}
 		//this.startPartyCommandSelection();
 	};
 
@@ -1572,6 +1618,23 @@ Window_Selectable.prototype.processCancel = function() {
 		// v1.17 後ろに移動
 		Window_Selectable.prototype.processCancel.call(this);
 	};
+
+	// v1.29 
+	Window_EnemyBookIndex.prototype.cursorRight = function(wrap) {
+    var index = this.index();
+		var maxItems = this.maxItems();
+		var maxPageRows = this.maxPageRows();
+		index = Math.min(index+maxPageRows, maxItems-1);
+		this.select(index);
+	};
+	Window_EnemyBookIndex.prototype.cursorLeft = function(wrap) {
+    var index = this.index();
+		var maxPageRows = this.maxPageRows();
+		index = Math.max(index-maxPageRows, 0);
+		this.select(index);
+	};
+
+
 
 //=============================================================================
 // Window_EnemyBookStatus
@@ -2220,5 +2283,138 @@ Window_Selectable.prototype.processCancel = function() {
 		}
 		return r;
 	}
+
+
+// 
+//=============================================================================
+// v1.28 ショートカットキー
+//=============================================================================
+// 参考プラグイン：Torigoya_OneButtonSkill.js
+// http://torigoya.hatenadiary.jp/
+// プラグイン制作者：ru_shalm様
+
+
+		var AB_EnemyBook = {
+			name: 'AB_EnemyBook',
+			backWindow :null
+		};
+//-----------------------------------
+
+
+    AB_EnemyBook.onCommand = function () {
+		// v1.28
+				SceneManager._scene.battleEnemyBook();
+    };
+
+// Window_ActorCommand-----------------------------------
+ 
+    Window_ActorCommand.prototype.processAB_EnemyBook = function () {
+        if (!$gameParty.inBattle()) return;
+        this.playOkSound();
+        this.updateInputData();
+        this.deactivate();
+				AB_EnemyBook.backWindow = 'actor_command';
+        this.callHandler('ab_enemybook');
+    };
+    
+    var _Scene_Battle_createActorCommandWindow = Scene_Battle.prototype.createActorCommandWindow;
+    Scene_Battle.prototype.createActorCommandWindow = function () {
+        _Scene_Battle_createActorCommandWindow.apply(this);
+        this._actorCommandWindow.setHandler('ab_enemybook', AB_EnemyBook.onCommand.bind(this));
+    };
+
+		var _Window_ActorCommand_processHandling = Window_ActorCommand.prototype.processHandling;
+    Window_ActorCommand.prototype.processHandling = function () {
+        _Window_ActorCommand_processHandling.apply(this);
+        if (this.isOpenAndActive()) {
+            if (Input.isTriggered(ShortCutButtonName)) {
+                this.processAB_EnemyBook();
+            }
+        }
+    };
+
+
+// Window_BattleSkill-----------------------------------
+
+    Window_BattleSkill.prototype.processAB_EnemyBook = function () {
+        if (!$gameParty.inBattle()) return;
+        this.playOkSound();
+        this.updateInputData();
+        this.deactivate();
+				AB_EnemyBook.backWindow = 'skill';
+        this.callHandler('ab_enemybook');
+    };
+    
+    var _Scene_Battle_createSkillWindow = Scene_Battle.prototype.createSkillWindow;
+    Scene_Battle.prototype.createSkillWindow = function () {
+        _Scene_Battle_createSkillWindow.apply(this);
+        this._skillWindow.setHandler('ab_enemybook', AB_EnemyBook.onCommand.bind(this));
+    };
+
+		var _Window_BattleSkill_processHandling = Window_BattleSkill.prototype.processHandling;
+    Window_BattleSkill.prototype.processHandling = function () {
+        _Window_BattleSkill_processHandling.apply(this);
+        if (this.isOpenAndActive()) {
+            if (Input.isTriggered(ShortCutButtonName)) {
+                this.processAB_EnemyBook();
+            }
+        }
+    };
+// Window_BattleItem-----------------------------------
+
+    Window_BattleItem.prototype.processAB_EnemyBook = function () {
+        if (!$gameParty.inBattle()) return;
+        this.playOkSound();
+        this.updateInputData();
+        this.deactivate();
+				AB_EnemyBook.backWindow = 'item';
+        this.callHandler('ab_enemybook');
+    };
+    
+    var _Scene_Battle_createItemWindow = Scene_Battle.prototype.createItemWindow;
+    Scene_Battle.prototype.createItemWindow = function () {
+        _Scene_Battle_createItemWindow.apply(this);
+        this._itemWindow.setHandler('ab_enemybook', AB_EnemyBook.onCommand.bind(this));
+    };
+
+		var _Window_BattleItem_processHandling = Window_BattleItem.prototype.processHandling;
+    Window_BattleItem.prototype.processHandling = function () {
+        _Window_BattleItem_processHandling.apply(this);
+        if (this.isOpenAndActive()) {
+            if (Input.isTriggered(ShortCutButtonName)) {
+                this.processAB_EnemyBook();
+								console.log("itemshift");
+            }
+        }
+    };
+// Window_PartyCommand-----------------------------------
+
+    Window_PartyCommand.prototype.processAB_EnemyBook = function () {
+        if (!$gameParty.inBattle()) return;
+        this.playOkSound();
+        this.updateInputData();
+        this.deactivate();
+				AB_EnemyBook.backWindow = 'party_command';
+        this.callHandler('ab_enemybook');
+    };
+    
+    var _Scene_Battle_createPartyCommandWindow = Scene_Battle.prototype.createPartyCommandWindow;
+    Scene_Battle.prototype.createPartyCommandWindow = function () {
+        _Scene_Battle_createPartyCommandWindow.apply(this);
+        this._partyCommandWindow.setHandler('ab_enemybook', AB_EnemyBook.onCommand.bind(this));
+    };
+
+		var _Window_PartyCommand_processHandling = Window_PartyCommand.prototype.processHandling;
+    Window_PartyCommand.prototype.processHandling = function () {
+        _Window_PartyCommand_processHandling.apply(this);
+        if (this.isOpenAndActive()) {
+            if (Input.isTriggered(ShortCutButtonName)) {
+                this.processAB_EnemyBook();
+								console.log("itemshift");
+            }
+        }
+    };
+
+
 
 })();
