@@ -1,6 +1,6 @@
 ﻿// =============================================================================
 // AB_EnemyBook.js
-// Version: 1.30
+// Version: 1.31
 // -----------------------------------------------------------------------------
 // [Homepage]: ヱビのノート
 //             http://www.zf.em-net.ne.jp/~ebi-games/
@@ -9,7 +9,7 @@
 
 
 /*:
- * @plugindesc v1.30 Displays detailed statuses of enemies.
+ * @plugindesc v1.31 Displays detailed statuses of enemies.
  * Includes element rates, state rates etc.
  * @author ヱビ
  * 
@@ -690,7 +690,7 @@
  */
 
 /*:ja
- * @plugindesc v1.30 戦闘中も確認できるモンスター図鑑です。属性、ステートの耐性の確認もできます。
+ * @plugindesc v1.31 戦闘中も確認できるモンスター図鑑です。属性、ステートの耐性の確認もできます。
  * @author ヱビ
  * 
  * @param ShowCommandInBattle
@@ -1357,6 +1357,9 @@
  * ============================================================================
  * 更新履歴
  * ============================================================================
+ * 
+ * Version 1.31
+ *   未登録の敵キャラの画像が表示されていた問題を修正しました。
  * 
  * Version 1.30
  *   英訳しました。
@@ -2468,7 +2471,7 @@ Window_Selectable.prototype.processCancel = function() {
 		var isCurrentStatus = this.isCurrentStatus(enemy);
 
 				// v1.17
-		if (!enemy) {
+		if (!enemy|| (this.isAllEnemies && !$gameSystem.isInEnemyBook(enemy.enemy()))) {
 			this._enemySprite.bitmap = null;
 			return;
 		}
