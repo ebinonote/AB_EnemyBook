@@ -1,6 +1,6 @@
 ﻿// =============================================================================
 // AB_EnemyBook.js
-// Version: 1.04
+// Version: 1.05
 // -----------------------------------------------------------------------------
 // [Homepage]: ヱビのノート
 //             http://www.zf.em-net.ne.jp/~ebi-games/
@@ -64,6 +64,10 @@
  * @param NoEffectStateName
  * @desc 効かないステートの名前です。
  * @default 無効ステート
+ * 
+ * @param DefeatNumberName
+ * @desc 敵を倒した数の名前です。
+ * @default 倒した数
  * 
  * @param UnknownDropItemIcon
  * @desc 未知の敵キャラの落とすアイテムのアイコンの番号です。
@@ -156,6 +160,11 @@
  * 0:非表示、1:表示
  * @default 1
  * 
+ * @param DispDefeatNumber
+ * @desc 図鑑にその敵を倒した数を表示するか決めます。
+ * 0:非表示、1:表示
+ * @default 1
+ * 
  * @param ---属性アイコン---
  * @default 
  * 
@@ -186,6 +195,7 @@
  * ・ドロップアイテム
  * ・効きやすい属性、効きにくい属性
  * ・効きやすいステート、効きにくい（無効含む）ステート、効かないステート
+ * ・その敵を倒した数
  * 
  * 属性を表示するときは、2通りの方法があります。
  * 
@@ -300,6 +310,9 @@
  * 更新履歴
  * ============================================================================
  * 
+ * Version 1.05
+ *   図鑑に敵を倒した数を表示できるようにしました。
+ * 
  * Version 1.04
  *   属性の中にアイコンを書けない時のため、プラグインパラメータで属性のアイコン
  *   を設定できるようにしました。
@@ -378,6 +391,10 @@
 	if (UnknownDropItemIcon === Number.NaN) UnknownDropItemIcon = 0;
 	var ShowCurrentStatus = (parameters['ShowCurrentStatus'] == 1) ? true : false;
 	var DispDescribe = (parameters['DispDescribe'] == 1) ? true : false;
+
+	var DispDefeatNumber = (parameters['DispDefeatNumber'] == 1) ? true : false;
+	var DefeatNumberName = String(parameters['DefeatNumberName'] || "倒した数");
+
 	var UseElementIconInPluginParameter = (parameters['UseElementIconInPluginParameter'] == 1) ? true : false;
 	var ElementIcons = (parameters['ElementIcons']).split(" ");
 	var a = [0];
@@ -451,6 +468,10 @@
 		return this._showCurrentEnemyStatus;
 	};
 
+	Game_System.prototype.clearEnemyBook = function() {
+		this._enemyBookFlags = [];
+	};
+
 	Game_System.prototype.addToEnemyBook = function(enemyId) {
 		if (!this._enemyBookFlags) {
 			this.clearEnemyBook();
@@ -472,9 +493,6 @@
 		}
 	};
 	
-	Game_System.prototype.clearEnemyBook = function() {
-		this._enemyBookFlags = [];
-	};
 	
 	Game_System.prototype.isInEnemyBook = function(enemy) {
 		if (this._enemyBookFlags && enemy) {
@@ -482,6 +500,30 @@
 		} else {
 			return false;
 		}
+	};
+
+	Game_System.prototype.clearDefeatNumber = function() {
+		this._defeatNumbers = [];
+	};
+
+	Game_System.prototype.incrementDefeatNumber = function(id) {
+		if (!this._defeatNumbers) {
+			this.clearDefeatNumber();
+		}
+		if (!this._defeatNumbers[id]) {
+			this._defeatNumbers[id] = 0;
+		}
+		this._defeatNumbers[id]++;
+	};
+
+	Game_System.prototype.defeatNumber = function(id) {
+		if (!this._defeatNumbers) {
+			this.clearDefeatNumber();
+		}
+		if (!this._defeatNumbers[id]) {
+			this._defeatNumbers[id] = 0;
+		}
+		return this._defeatNumbers[id];
 	};
 
 //=============================================================================
@@ -685,12 +727,13 @@
 		var standardPadding = Window_Base.prototype.standardPadding();
 		var height = 0;
 		var linePlus = 1;
-		if (DispDropItems) return lineHeight * 9 + textPadding * 2;
 		for (var i = 0; i < 8; i++) {
 			if (dispParameters[i]) {
-				linePlus += 1;
+				linePlus++;
 			}
 		}
+		if (DispDefeatNumber) linePlus++;
+		linePlus = Math.max(linePlus, DispDropItems ? 9 : 6);
 		linePlus = Math.max(linePlus, 6);
 		height = lineHeight * linePlus + textPadding * 2;
 
@@ -949,6 +992,8 @@
 		var columnWidth = this.contentsWidth() / 2 - this.standardPadding();
 		var x = 0;
 		var y = 0;
+		var w = column2x / 2 - this.standardPadding();
+		//var mY = 0;
 		var lineHeight = this.lineHeight();
 
 		this.contents.clear();
@@ -993,7 +1038,7 @@
 						this.drawActorHp(enemy, x, y, 220);
 					}	else {
 						this.resetTextColor();
-						this.drawText(UnknownData, x + 140, y, 80);
+						this.drawText(UnknownData, x + w, y, w, 'right');
 					}
 				} else if (i == 1 && $gameTroop.inBattle() && ($gameSystem.isShowCurrentEnemysStatus() || this.isCheck)) {
 					this.changeTextColor(this.systemColor());
@@ -1002,21 +1047,33 @@
 						this.drawActorMp(enemy, x, y, 220);
 					}	else {
 						this.resetTextColor();
-						this.drawText(UnknownData, x + 140, y, 80);
+						this.drawText(UnknownData, x + w, y, w, 'right');
 					}
 				} else {
 					this.changeTextColor(this.systemColor());
-					this.drawText(TextManager.param(i), x, y, 160);
+					this.drawText(TextManager.param(i), x, y, w);
 					this.resetTextColor();
 					if (!isUnknownEnemy) {
-						this.drawText(enemy.param(i), x + 160, y, 60, 'right');
+						this.drawText(enemy.param(i), x + w, y, w, 'right');
 					} else {
-						this.drawText(UnknownData, x + 140, y, 80);
+						this.drawText(UnknownData, x + w, y, w, 'right');
 					}
 				}
 				y += lineHeight;
 			}
 		}
+
+		if (DispDefeatNumber) {
+			this.resetTextColor();
+			this.changeTextColor(this.systemColor());
+			this.drawText(DefeatNumberName, x, y, w);
+			this.resetTextColor();
+			this.drawText($gameSystem.defeatNumber(enemy.enemyId()), x + w, y, w , 'right');
+			y += lineHeight;
+		}
+
+		//mY = y;
+
 		x = column1x;
 		y = lineHeight * 6 + this.textPadding();
 
@@ -1038,6 +1095,7 @@
 
 		x = 0;
 		y = Scene_EnemyBook.prototype.calcParameterHeight();
+		//y = (mY > y) ? mY : y;
 		var j = 0;
 
 		for (var i = 0; i < 5; i++) {
@@ -1304,6 +1362,17 @@
 				BattleManager._logWindow.push('addText', message);
 			}
 		}
+	};
+
+
+//=============================================================================
+// Game_Enemy
+//=============================================================================
+
+	var _Game_Enemy_die = Game_Enemy.prototype.die;
+	Game_Enemy.prototype.die = function() {
+		_Game_Enemy_die.call(this);
+		$gameSystem.incrementDefeatNumber(this.enemyId());
 	};
 
 })();
