@@ -16,19 +16,19 @@ This plugin allows
 
 You can display these statuses.
 
- - Enemy Name
- - Enemy Sprite
-★Enemy's Index Number
-★Enemy's Level
-★Defeat Number
- - HP, MP, ATK, DEF, MAT, MDF, AGI, LUK
-★Skills - v1.30
- - Drop Items
-★Weak Elements, Resister Elements
-★Weak States, Resister States
- - Description
-★Achievement of Enemybook
-(★ sindicate new items.)
+・Enemy Name  
+・Enemy Sprite  
+★Enemy's Index Number  
+★Enemy's Level  
+★Defeat Number  
+・HP, MP, ATK, DEF, MAT, MDF, AGI, LUK  
+★Skills - v1.30  
+・Drop Items  
+★Weak Elements, Resister Elements  
+★Weak States, Resister States  
+・Description  
+★Achievement of Enemybook  
+(★ sindicate new items.)  
 
 
 
