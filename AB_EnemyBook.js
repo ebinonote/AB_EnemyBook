@@ -1,6 +1,6 @@
 ﻿// =============================================================================
 // AB_EnemyBook.js
-// Version: 1.11
+// Version: 1.12
 // -----------------------------------------------------------------------------
 // [Homepage]: ヱビのノート
 //             http://www.zf.em-net.ne.jp/~ebi-games/
@@ -8,7 +8,7 @@
 
 
 /*:
- * @plugindesc v1.11 戦闘中も確認できるモンスター図鑑です。属性、ステートの耐性の確認もできます。
+ * @plugindesc v1.12 戦闘中も確認できるモンスター図鑑です。属性、ステートの耐性の確認もできます。
  * @author ヱビ
  * 
  * @param ShowCommandInBattle
@@ -326,6 +326,10 @@
  * ============================================================================
  * 更新履歴
  * ============================================================================
+ * 
+ * Version 1.12
+ *   図鑑を開いたとき、1回目だけ敵キャラのスプライトがはみ出してしまう不具合を
+ *   修正しました。
  * 
  * Version 1.11
  *   図鑑を開いたとき、1回目は敵キャラのスプライトが表示されず、2回目にカーソル
@@ -1083,8 +1087,12 @@
 		*/
 		// ver 1.11
 		if (this._enemySprite.bitmap) {
-			//var bitmapWidth = this._enemySprite.bitmap.width;
-			var bitmapWidth = this._cw;
+			//ver 1.12
+			if (Imported.YEP_X_AnimatedSVEnemies) {
+				var bitmapWidth = this._cw;
+			} else {
+				var bitmapWidth = this._enemySprite.bitmap.width;
+			}
 			var contentsWidth = this.contents.width;
 			var scale = 1;
 			if (bitmapWidth > contentsWidth / 2) {
@@ -1166,7 +1174,18 @@
 		// Version 1.11
 		this._cw = cw;
 
-
+		// ver 1.12
+/*
+		var bitmapWidth = this._cw;
+		var contentsWidth = this.contents.width;
+		var scale = 1;
+		if (bitmapWidth > contentsWidth / 2) {
+			scale = contentsWidth / bitmapWidth / 2;
+		}
+		this._enemySprite.scale.x = scale;
+		this._enemySprite.scale.y = scale;
+		
+*/
 		this.resetTextColor();
 		this.drawText(enemy.name(), x, y, columnWidth);
 
