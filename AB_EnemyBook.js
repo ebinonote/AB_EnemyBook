@@ -1,6 +1,6 @@
 ﻿// =============================================================================
 // AB_EnemyBook.js
-// Version: 1.12
+// Version: 1.13
 // -----------------------------------------------------------------------------
 // [Homepage]: ヱビのノート
 //             http://www.zf.em-net.ne.jp/~ebi-games/
@@ -8,7 +8,7 @@
 
 
 /*:
- * @plugindesc v1.12 戦闘中も確認できるモンスター図鑑です。属性、ステートの耐性の確認もできます。
+ * @plugindesc v1.13 戦闘中も確認できるモンスター図鑑です。属性、ステートの耐性の確認もできます。
  * @author ヱビ
  * 
  * @param ShowCommandInBattle
@@ -22,6 +22,7 @@
  * @default 2
  * 
  * @param ShowCurrentStatus
+ * @type boolean
  * @desc ONにすると、図鑑で敵の現在の情報（現在HPなど）が見られます。
  * プラグインコマンドで変更することもできます。0:OFF、1:ON
  * @default 0
@@ -326,6 +327,11 @@
  * ============================================================================
  * 更新履歴
  * ============================================================================
+ * 
+ * Version 1.13
+ *   YEP_X_AnimatedSVEnemiesを使っている場合、アニメーションするようにしまし
+ *   た。また、YEP_X_AnimatedSVEnemiesを使っている場合でも、1回目でも表示される
+ *   ようにしました。
  * 
  * Version 1.12
  *   図鑑を開いたとき、1回目だけ敵キャラのスプライトがはみ出してしまう不具合を
@@ -1046,7 +1052,8 @@
 		this.addChildToBack(this._enemySprite);
 		this.isCheck = false;
 		this.refresh();
-		this._cw = 0;
+		// this._cw = 0;
+		this._spriteFrameCount = 0;
 	};
 
 	Window_EnemyBookStatus.prototype.setup = function() {
@@ -1073,30 +1080,51 @@
 
 	Window_EnemyBookStatus.prototype.update = function() {
 		Window_Base.prototype.update.call(this);
-/*
-		if (this._enemySprite.bitmap) {
-			var bitmapWidth = this._enemySprite.bitmap.width;
-			var contentsWidth = this.contents.width;
-			var scale = 1;
-			if (bitmapWidth > contentsWidth / 2) {
-				scale = contentsWidth / bitmapWidth / 2;
-			}
-			this._enemySprite.scale.x = scale;
-			this._enemySprite.scale.y = scale;
-		}
-		*/
 		// ver 1.11
 		if (this._enemySprite.bitmap) {
-			//ver 1.12
+			var dataEnemy = this._enemy.enemy();
+			// ver 1.13
 			if (Imported.YEP_X_AnimatedSVEnemies) {
-				var bitmapWidth = this._cw;
+				var bitmap = this._enemySprite.bitmap;
+				if (this._spriteFrameCount % 12 === 0) {
+					if (dataEnemy.sideviewBattler[0]) {
+						var ary = [0,1,2,1];
+						var motionIndex = 0; // 待機モーション
+						var pattern = ary[Math.floor(this._spriteFrameCount / 12) % 4];
+						var cw = bitmap.width / 9;
+						var ch = bitmap.height / 6;
+						var cx = Math.floor(motionIndex / 6) * 3 + pattern;
+						var cy = motionIndex % 6;
+						this._enemySprite.setFrame(cx * cw, cy * ch, cw, ch);
+						// YEP_X_AnimatedSVEnemiesにはここに Sprite_Enemy.adjustMainBitmapSettingsがある。
+						// これはBitmapを新しく作っている。（？）
+						// サイドビューバトラーの高さと幅を指定していた場合調整される。
+						// this._enemySprite.bitmap = new Bitmap(cw, ch);
+
+					// サイドビューバトラーじゃない場合
+					} else {
+						// 1回目に表示されるようになったけどはみ出す
+						this._enemySprite.setFrame(0,0,bitmap.width, bitmap.height);
+						// undefined
+						// console.log(this._enemySprite.spriteScaleX);
+					}
+				}
+			}
+			//ver 1.12
+			if (Imported.YEP_X_AnimatedSVEnemies && dataEnemy.sideviewBattler[0]) {
+				var bitmapWidth = bitmap.width / 9;
 			} else {
-				var bitmapWidth = this._enemySprite.bitmap.width;
+				var bitmapWidth = bitmap.width;
 			}
 			var contentsWidth = this.contents.width;
 			var scale = 1;
+			//
+			//console.log(this._enemySprite.bitmap.width);
+			//console.log(contentsWidth);
+			console.log("bitmapWidth:"+bitmapWidth+"(contentsWidth / 2):" +contentsWidth / 2);
 			if (bitmapWidth > contentsWidth / 2) {
 				scale = contentsWidth / bitmapWidth / 2;
+				//console.log("bitmapWidth(+"bitmapWidth"+) > contentsWidth / 2");
 			}
 			this._enemySprite.scale.x = scale;
 			this._enemySprite.scale.y = scale;
@@ -1129,6 +1157,7 @@
 		var hue = enemy.battlerHue();
 
 		var bitmap;
+		
 		this._enemySprite.scale.x = 1;
 		this._enemySprite.scale.y = 1;
 		if ($gameSystem.isSideView()) {
@@ -1172,7 +1201,8 @@
 			}
 		}
 		// Version 1.11
-		this._cw = cw;
+		// version 1.13で削除
+		// this._cw = cw;
 
 		// ver 1.12
 /*
