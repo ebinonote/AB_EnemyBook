@@ -1,6 +1,6 @@
 ﻿// =============================================================================
 // AB_EnemyBook.js
-// Version: 1.26
+// Version: 1.27
 // -----------------------------------------------------------------------------
 // [Homepage]: ヱビのノート
 //             http://www.zf.em-net.ne.jp/~ebi-games/
@@ -9,10 +9,11 @@
 
 
 /*:
- * @plugindesc v1.26 戦闘中も確認できるモンスター図鑑です。属性、ステートの耐性の確認もできます。
+ * @plugindesc v1.27 戦闘中も確認できるモンスター図鑑です。属性、ステートの耐性の確認もできます。
  * @author ヱビ
  * 
  * @param ShowCommandInBattle
+ * @text 戦闘中に「敵の情報」表示
  * @type select
  * @option 表示
  * @value 1
@@ -23,6 +24,7 @@
  * @default 1
  * 
  * @param ShowAllBookCommandInBattle
+ * @text 戦闘中に「図鑑」表示
  * @type select
  * @option 表示
  * @value 1
@@ -33,6 +35,7 @@
  * @default 1
  * 
  * @param ResisterTiming
+ * @text 登録タイミング
  * @type select
  * @option 登録されない
  * @value 0
@@ -45,6 +48,7 @@
  * @default 2
  * 
  * @param ShowCurrentStatus
+ * @text 「図鑑」で現在のステータスを表示
  * @type select
  * @option ON
  * @value 1
@@ -55,6 +59,7 @@
  * @default 0
  * 
  * @param HideUnknownStatusInSkill
+ * @text 「チェック」で未登録の敵のステータスを隠す
  * @type select
  * @option ON
  * @value 1
@@ -64,6 +69,7 @@
  * @default 0
  * 
  * @param ShowGeneralStatusInSkill
+ * @text 「チェック」で一般的なステータスを表示
  * @type select
  * @option ON
  * @value 1
@@ -73,6 +79,7 @@
  * @default 0
  * 
  * @param HideItemUntilGet
+ * @text 手に入れるまでドロップアイテムを隠す
  * @type select
  * @option ON
  * @value 1
@@ -85,50 +92,62 @@
  * @default 
  * 
  * @param EnemyBookCommandName
+ * @text 「敵の情報」の名前
  * @desc バトル中の敵の情報を見るコマンドの名前です。
  * @default 敵の情報
  * 
  * @param EnemyBookAllCommandName
+ * @text 「図鑑」の名前
  * @desc バトル中、通常通り図鑑を開くコマンドの名前です。
  * @default 図鑑
  * 
  * @param Achievement
+ * @text 達成率の名前
  * @desc 達成率の名前です。
  * @default 達成率
  * 
  * @param UnknownEnemy
- * @desc 未確認の敵キャラの索引名です。
+ * @text 未登録の敵の索引名
+ * @desc 未登録の敵キャラの索引名です。
  * @default ？？？？？？
  * 
  * @param UnknownData
+ * @text 未登録の敵のデータ名
  * @desc まだ図鑑に登録されていない敵キャラの各データの内容です。
  * @default ？？？
  * 
  * @param WeakElementName
+ * @text 弱点属性の名前
  * @desc 効きやすい属性の名前です。
  * @default 弱点属性
  * 
  * @param ResistElementName
+ * @text 耐性属性の名前
  * @desc 効きにくい属性の名前です。
  * @default 耐性属性
  * 
  * @param WeakStateName
+ * @text 弱点ステートの名前
  * @desc 効きやすいステートの名前です。
  * @default 弱点ステート
  * 
  * @param ResistStateName
+ * @text 耐性ステートの名前
  * @desc 効きにくいステートの名前です。無効ステートも含みます。
  * @default 耐性ステート
  * 
  * @param NoEffectStateName
+ * @text 無効ステートの名前
  * @desc 効かないステートの名前です。
  * @default 無効ステート
  * 
  * @param DefeatNumberName
+ * @text 敵を倒した数の名前
  * @desc 敵を倒した数の名前です。
  * @default 倒した数
  * 
  * @param UnknownDropItemIcon
+ * @text 未登録の敵のアイテムアイコン
  * @type number
  * @min 0
  * @desc 未知の敵キャラの落とすアイテムのアイコンの番号です。
@@ -136,21 +155,25 @@
  * @default 16
  * 
  * @param AddEnemySkillMessage
+ * @text 図鑑登録スキル成功メッセージ
  * @desc スキルで敵キャラを図鑑に登録することに成功したときの
  * メッセージです。%1が敵キャラの名前に置き換えられます。
  * @default %1を図鑑に登録した！
  * 
  * @param FailToAddEnemySkillMessage
- * @desc スキルで敵キャラを図鑑に登録することに失敗したときの
+ * @text 図鑑登録スキル不能メッセージ
+ * @desc スキルで敵キャラが図鑑に載らない敵だった場合の
  * メッセージです。%1が敵キャラの名前に置き換えられます。
  * @default %1は図鑑には載せられない！
 
  * @param MissToAddEnemySkillMessage
+ * @text 図鑑登録スキル失敗メッセージ
  * @desc スキルで敵キャラを図鑑に登録することに失敗したときの
  * メッセージです。%1が敵キャラの名前に置き換えられます。
  * @default %1を図鑑に登録するのに失敗した！
  * 
  * @param FailToCheckEnemySkillMessage
+ * @text チェックスキル失敗メッセージ
  * @desc スキルで敵キャラの情報を見ることに失敗したときの
  * メッセージです。%1が敵キャラの名前に置き換えられます。
  * @default %1の情報はわからなかった！
@@ -159,6 +182,7 @@
  * @default 
  * 
  * @param DispNo
+ * @text 敵キャラの図鑑No表示
  * @type select
  * @option 表示
  * @value 1
@@ -168,6 +192,7 @@
  * @default 1
  * 
  * @param DispLv
+ * @text レベル表示
  * @type select
  * @option 表示
  * @value 1
@@ -177,6 +202,7 @@
  * @default 1
  * 
  * @param DispDefeatNumber
+ * @text 倒した数表示
  * @type select
  * @option 表示
  * @value 1
@@ -187,6 +213,7 @@
  * @default 1
  * 
  * @param DispHP
+ * @text ＨＰ表示
  * @type select
  * @option 表示
  * @value 1
@@ -196,6 +223,7 @@
  * @default 1
  * 
  * @param DispMP
+ * @text ＭＰ表示
  * @type select
  * @option 表示
  * @value 1
@@ -205,6 +233,7 @@
  * @default 1
  * 
  * @param DispTP
+ * @text ＴＰ表示
  * @type select
  * @option 表示
  * @value 1
@@ -214,6 +243,7 @@
  * @default 0
  * 
  * @param DispATK
+ * @text 攻撃力表示
  * @type select
  * @option 表示
  * @value 1
@@ -223,6 +253,7 @@
  * @default 1
  * 
  * @param DispDEF
+ * @text 防御力表示
  * @type select
  * @option 表示
  * @value 1
@@ -232,6 +263,7 @@
  * @default 1
  * 
  * @param DispMAT
+ * @text 魔法力表示
  * @type select
  * @option 表示
  * @value 1
@@ -241,6 +273,7 @@
  * @default 1
  * 
  * @param DispMDF
+ * @text 魔法防御表示
  * @type select
  * @option 表示
  * @value 1
@@ -250,6 +283,7 @@
  * @default 1
  * 
  * @param DispAGI
+ * @text 敏捷性表示
  * @type select
  * @option 表示
  * @value 1
@@ -259,6 +293,7 @@
  * @default 1
  * 
  * @param DispLUK
+ * @text 運表示
  * @type select
  * @option 表示
  * @value 1
@@ -268,11 +303,13 @@
  * @default 1
  * 
  * @param HitRateName
+ * @text 命中率名前
  * @type string
  * @desc 命中率を図鑑になんと表示しますか？
  * @default 命中率
  * 
  * @param DispHitRate
+ * @text 命中率表示
  * @type select
  * @option 表示
  * @value 1
@@ -282,6 +319,7 @@
  * @default 0
  * 
  * @param DispDropItems
+ * @text ドロップアイテム表示
  * @type select
  * @option 表示
  * @value 1
@@ -291,6 +329,7 @@
  * @default 1
  * 
  * @param DispWeakElement
+ * @text 弱点属性表示
  * @type select
  * @option 表示
  * @value 1
@@ -300,6 +339,7 @@
  * @default 1
  * 
  * @param DispResistElement
+ * @text 耐性属性表示
  * @type select
  * @option 表示
  * @value 1
@@ -309,6 +349,7 @@
  * @default 1
  * 
  * @param DispWeakState
+ * @text 弱点ステート表示
  * @type select
  * @option 表示
  * @value 1
@@ -319,6 +360,7 @@
  * @default 1
  * 
  * @param DispResistState
+ * @text 耐性ステート表示
  * @type select
  * @option 表示
  * @value 1
@@ -329,6 +371,7 @@
  * @default 1
  * 
  * @param DispNoEffectState
+ * @text 無効ステート表示
  * @type select
  * @option 表示
  * @value 1
@@ -339,6 +382,7 @@
  * @default 0
  * 
  * @param DispDescribe
+ * @text 説明表示
  * @type select
  * @option 表示
  * @value 1
@@ -347,6 +391,13 @@
  * @desc 図鑑に敵キャラの説明を表示するか決めます。
  * 0:非表示、1:表示
  * @default 1
+ * 
+ * @param DescribeLineNumber
+ * @text 説明の行数
+ * @type number
+ * @desc 図鑑に敵キャラの説明を何行表示しますか？
+ * （0～6行）
+ * @default 2
  * 
  * @param ---属性アイコン---
  * @default 
@@ -544,10 +595,24 @@
  * 
  * 〇EnemyBook.jsと同じタグ
  * 
+ *  - v1.27より、表示できる行が増えました。
+ * ウィンドウの高さを計算するため、プラグインパラメータ「説明の行数」で、
+ * 表示する行の数を設定してください。何行までも表示できます。
+ * 
  * <desc1:なんとか>
  *   説明１行目です。
  * <desc2:かんとか>
  *   説明２行目です。
+ * <desc3:ブラブラ>
+ *   説明３行目です。
+ * <desc4:ああああ>
+ *   説明４行目です。
+ * <desc5:いいいい>
+ *   説明５行目です。
+ * <desc6:うううう>
+ *   説明６行目です。
+ * 
+ * 
  * <book:no>
  *   これを設定した敵キャラは図鑑に載りません。
  * 
@@ -592,6 +657,12 @@
  * ============================================================================
  * 更新履歴
  * ============================================================================
+ * 
+ * Version 1.27
+ *   プラグインパラメータを日本語にしました。
+ *   ドロップアイテムの個数によってその下の情報の表示位置が異なる問題を修正しま
+ *   した。
+ *   敵キャラの説明の行数を増やせるようにしました。
  * 
  * Version 1.26
  *   TPと命中率を表示した時、ウィンドウサイズが反映されない不具合を修正しまし
@@ -757,9 +828,11 @@
 	var ShowCurrentStatus = (parameters['ShowCurrentStatus'] == 1) ? true : false;
 	var DispDescribe = (parameters['DispDescribe'] == 1) ? true : false;
 
-	var DispDefeatNumber = (parameters['DispDefeatNumber'] == 1) ? true : false;
+	var DescribeLineNumber = Number(parameters['DescribeLineNumber']);
 
 	var UseElementIconInPluginParameter = (parameters['UseElementIconInPluginParameter'] == 1) ? true : false;
+	
+	var DispDefeatNumber = Number(parameters['DispDefeatNumber']) == 1 ? true : false;
 	var dispParameters = [];
 	dispParameters[0] = (parameters['DispHP'] == 1) ? true : false;
 	dispParameters[1] = (parameters['DispMP'] == 1) ? true : false;
@@ -1253,7 +1326,7 @@
 		linePlus = Math.ceil(linePlus) * 2;
 
 		if (DispDescribe) {
-			linePlus += 2;
+			linePlus += DescribeLineNumber;
 		}
 		height += linePlus * lineHeight + textPadding * Math.ceil(linePlus / 2);
 		return height;
@@ -1820,6 +1893,7 @@ Window_Selectable.prototype.processCancel = function() {
 		//y = Scene_EnemyBook.prototype.calcParameterHeight();
 		//y = (mY > y) ? mY : y;
 		var j = 0;
+		y = Scene_EnemyBook.prototype.calcParameterHeight();
 
 		for (var i = 0; i < 5; i++) {
 			if (dispRates[i]) {
@@ -1854,8 +1928,9 @@ Window_Selectable.prototype.processCancel = function() {
 		x = 0;
 		
 		if (!isUnknownEnemy && DispDescribe) {
-			this.drawTextEx(dataEnemy.meta.desc1, x, y + lineHeight * 0);
-			this.drawTextEx(dataEnemy.meta.desc2, x, y + lineHeight * 1);
+			for (var i = 1; i <= DescribeLineNumber; i++) {
+				this.drawTextEx(dataEnemy.meta["desc"+i], x, y + lineHeight * (i-1));
+			}
 		}
 	};
 
