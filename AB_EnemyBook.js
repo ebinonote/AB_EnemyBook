@@ -1,6 +1,6 @@
 ﻿// =============================================================================
 // AB_EnemyBook.js
-// Version: 1.02
+// Version: 1.03
 // -----------------------------------------------------------------------------
 // [Homepage]: ヱビのノート
 //             http://www.zf.em-net.ne.jp/~ebi-games/
@@ -32,6 +32,10 @@
  * @param EnemyBookCommandName
  * @desc バトル中の敵の情報を見るコマンドの名前です。
  * @default 敵の情報
+ * 
+ * @param Achievement
+ * @desc 達成率の名前です。
+ * @default 達成率
  * 
  * @param UnknownEnemy
  * @desc 未確認の敵キャラの索引名です。
@@ -84,6 +88,10 @@
  * @param ---表示項目---
  * @default 
  * 
+ * @param DispNo
+ * @desc 図鑑に番号を表示するか決めます。0:非表示、1:表示
+ * @default 1
+ *
  * @param DispHP
  * @desc 図鑑にHPを表示するか決めます。0:非表示、1:表示
  * @default 1
@@ -266,6 +274,12 @@
  * 更新履歴
  * ============================================================================
  * 
+ * Version 1.03
+ *   モンスターの番号を表示できるようにしました。
+ *   達成率を表示するようにしました。
+ *   無効化ステートの項目をONにしているとき、耐性ステートには無効化ステートは
+ *   表示されないようにしました。
+ *  
  * Version 1.02
  *   無効ステートの項目を追加しました。
  *   耐性の項目が奇数のとき、図鑑説明がかぶってしまう不具合を修正しました。
@@ -300,11 +314,13 @@
 	var EnemyBookCommandName = (parameters['EnemyBookCommandName'] || "敵の情報");
 	var ShowCommandInBattle = (parameters['ShowCommandInBattle'] == 1) ? true : false;
 	var ResisterTiming = Number(parameters['ResisterTiming']);
+	var Achievement = String(parameters['Achievement'] || "");
 	var UnknownEnemy = String(parameters['UnknownEnemy'] || "");
 	var UnknownData = String(parameters['UnknownData'] || "");
 	var AddEnemySkillMessage = String(parameters['AddEnemySkillMessage'] || "");
 	var FailToAddEnemySkillMessage = String(parameters['FailToAddEnemySkillMessage'] || "");
 	var FailToCheckEnemySkillMessage = String(parameters['FailToCheckEnemySkillMessage'] || "");
+	var DispNo = (parameters['DispNo'] == 1) ? true : false;
 	var dispParameters = [];
 	dispParameters[0] = (parameters['DispHP'] == 1) ? true : false;
 	dispParameters[1] = (parameters['DispMP'] == 1) ? true : false;
@@ -587,17 +603,21 @@
 
 	Scene_EnemyBook.prototype.create = function() {
 		Scene_MenuBase.prototype.create.call(this);
-		this._indexWindow = new Window_EnemyBookIndex(0, 0);
+		this._percentWindow = new Window_EnemyBookPercent(0, 0);
+		var wy = this._percentWindow.height;
+		this._indexWindow = new Window_EnemyBookIndex(0, wy);
 		this._indexWindow.setHandler('cancel', this.popScene.bind(this));
 		var wx = this._indexWindow.width;
 		var ww = Graphics.boxWidth - wx;
 		//var wh = Graphics.boxHeight;
 		var wh = this.calcStatusWindowHeight();
 		this._statusWindow = new Window_EnemyBookStatus(wx, 0, ww, wh);
+		this.addWindow(this._percentWindow);
 		this.addWindow(this._indexWindow);
 		this.addWindow(this._statusWindow);
 		this._indexWindow.setup();
 		this._indexWindow.setStatusWindow(this._statusWindow);
+		this._indexWindow.setPercentWindow(this._percentWindow);
 	};
 
 	Scene_EnemyBook.prototype.calcStatusWindowHeight = function() {
@@ -642,6 +662,43 @@
 
 
 //=============================================================================
+// Window_EnemyBookPercent
+//=============================================================================
+
+	Window_EnemyBookPercent = function() {
+		this.initialize.apply(this, arguments);
+	};
+
+	Window_EnemyBookPercent.prototype = Object.create(Window_Base.prototype);
+	Window_EnemyBookPercent.prototype.constructor = Window_EnemyBookPercent;
+
+	Window_EnemyBookPercent.prototype.initialize = function(x, y, width, height) {
+		var width = Math.floor(Graphics.boxWidth / 3);
+		var height = this.fittingHeight(1);
+		Window_Base.prototype.initialize.call(this, x, y, width, height);
+		this.max = 0;
+		this.achievement = 0;
+	};
+
+	Window_EnemyBookPercent.prototype.setup = function() {
+		this.show();
+		this.open();
+	};
+
+	Window_EnemyBookPercent.prototype.setAchievement = function(max, achievement) {
+		this.max = max;
+		this.achievement = achievement;
+		this.refresh();
+	}
+
+	Window_EnemyBookPercent.prototype.refresh = function() {
+		if (this.max === 0) return;
+		var w1 = this.contentsWidth()/2;
+		this.drawText(Achievement, 0, 0, w1);
+		this.drawText(Math.floor(this.achievement / this.max * 100) + "%", w1, 0, w1, 'right');
+	}
+
+//=============================================================================
 // Window_EnemyBookIndex
 //=============================================================================
 	Window_EnemyBookIndex = function() {
@@ -654,7 +711,7 @@
 
 	Window_EnemyBookIndex.prototype.initialize = function(x, y) {
 		var width = Math.floor(Graphics.boxWidth / 3);
-		var height = Graphics.boxHeight;
+		var height = Graphics.boxHeight - y;
 		Window_Selectable.prototype.initialize.call(this, x, y, width, height);
 		//this.refresh();
 	}
@@ -691,6 +748,11 @@
 		return this._list ? this._list.length : 0;
 	};
 
+	Window_EnemyBookIndex.prototype.setPercentWindow = function(percentWindow) {
+		this._percentWindow = percentWindow;
+		this.updatePercent();
+	};
+
 	Window_EnemyBookIndex.prototype.setStatusWindow = function(statusWindow) {
 		this._statusWindow = statusWindow;
 		this.updateStatus();
@@ -700,6 +762,19 @@
 		Window_Selectable.prototype.update.call(this);
 		this.updateStatus();
 	};
+
+	Window_EnemyBookIndex.prototype.updatePercent = function() {
+		if (this._percentWindow && this._list) {
+			var a = 0;
+			for (var i = 1; i < $dataEnemies.length; i++) {
+				var enemy = $dataEnemies[i];
+				if (enemy.name && enemy.meta.book !== 'no') {
+					if ($gameSystem.isInEnemyBook(enemy)) a++;
+				}
+			}
+			this._percentWindow.setAchievement(this._list.length, a);
+		}
+	}
 
 	Window_EnemyBookIndex.prototype.updateStatus = function() {
 		if (this._statusWindow && this._list) {
@@ -755,7 +830,12 @@
 		} else {
 			name = UnknownEnemy;
 		}
-		this.drawText(name, rect.x, rect.y, rect.width);
+		if (!$gameParty.inBattle() && DispNo) {
+			this.drawText(index+1, rect.x, rect.y, 40);
+			this.drawText(name, rect.x + 40, rect.y, rect.width - 40);
+		} else {
+			this.drawText(name, rect.x, rect.y, rect.width);
+		}
 	};
 
 	Window_EnemyBookIndex.prototype.processCancel = function() {
@@ -1041,6 +1121,7 @@
 		for (var i=1,l=$dataStates.length; i<l; i++) {
 			var rate = enemy.stateRate(i);
 			if ((rate < 1 || enemy.isStateResist(i))&& $dataStates[i].meta.book !== "no") {
+				if (dispRates[4] && (rate <= 0 || enemy.isStateResist(i))) continue;
 				var icon = $dataStates[i].iconIndex;
 				if (icon) icons.push(icon);
 			}
