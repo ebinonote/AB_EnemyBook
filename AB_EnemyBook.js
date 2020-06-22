@@ -1,6 +1,6 @@
 ﻿// =============================================================================
 // AB_EnemyBook.js
-// Version: 1.03
+// Version: 1.04
 // -----------------------------------------------------------------------------
 // [Homepage]: ヱビのノート
 //             http://www.zf.em-net.ne.jp/~ebi-games/
@@ -156,6 +156,19 @@
  * 0:非表示、1:表示
  * @default 1
  * 
+ * @param ---属性アイコン---
+ * @default 
+ * 
+ * @param UseElementIconInPluginParameter
+ * @desc 属性の中のアイコンではなく、下のパラメータを使いますか？
+ * 0:OFF、1:ON
+ * @default 0
+ * 
+ * @param ElementIcons
+ * @desc 属性のアイコンです。1番から順番に半角スペースで区切って並
+ * べてください。
+ * @default 76 64 65 66 67 68 69 70 71
+ * 
  * @help
  * ============================================================================
  * どんなプラグイン？
@@ -174,8 +187,15 @@
  * ・効きやすい属性、効きにくい属性
  * ・効きやすいステート、効きにくい（無効含む）ステート、効かないステート
  * 
- * 属性を表示するときは、属性の名前の中にアイコンを入れておく必要があります。
- * 例：\i[64]炎
+ * 属性を表示するときは、2通りの方法があります。
+ * 
+ * 1.属性の名前の中にアイコンを入れる
+ *   例：\i[64]炎
+ * 
+ * 2.プラグインパラメータを使う
+ *   version1.04で追加しました。
+ *   UseElementIconInPluginParameterをONにし、
+ *   ElementIconsに属性アイコンの番号を半角スペースで区切って並べてください。
  * 
  * まだ図鑑に登録されていない敵との戦闘中に図鑑を開くと、データが「？？？」と
  * 表示されます。「？？？」の部分はプラグインパラメータの UnknownDataで設定
@@ -266,13 +286,25 @@
  *     図鑑に強さの目安となるレベルを記載します。
  *     何も書かなければ、何も表示されません。
  * 
+ *   <bookCanCheck>
+ *     Version 1.04で追加しました。
+ *     <book:no>を書いた敵でもこのタグを付ければ<checkEnemyStatus>のスキルで
+ *     チェックできます。
+ * 
  * ステートのメモ：
  *   <book:no>
  *     図鑑に表示しないようにできます。
  * 
+ * 
  * ============================================================================
  * 更新履歴
  * ============================================================================
+ * 
+ * Version 1.04
+ *   属性の中にアイコンを書けない時のため、プラグインパラメータで属性のアイコン
+ *   を設定できるようにしました。
+ *   <book:no>が設定されている敵キャラでも、<bookCanCheck>が設定されていれば
+ *   スキルでならチェックできるようにしました。
  * 
  * Version 1.03
  *   モンスターの番号を表示できるようにしました。
@@ -346,6 +378,11 @@
 	if (UnknownDropItemIcon === Number.NaN) UnknownDropItemIcon = 0;
 	var ShowCurrentStatus = (parameters['ShowCurrentStatus'] == 1) ? true : false;
 	var DispDescribe = (parameters['DispDescribe'] == 1) ? true : false;
+	var UseElementIconInPluginParameter = (parameters['UseElementIconInPluginParameter'] == 1) ? true : false;
+	var ElementIcons = (parameters['ElementIcons']).split(" ");
+	var a = [0];
+	ElementIcons = a.concat(ElementIcons);
+
 
 //=============================================================================
 // Game_System
@@ -1041,9 +1078,13 @@
 		}
 	};
 	Window_EnemyBookStatus.prototype.findElementIcon = function(elementId) {
-		var elementName = $dataSystem.elements[elementId];
-		if (elementName.match(/\i\[(\d+)\]/i)) {
-			return RegExp.$1;
+		if (UseElementIconInPluginParameter) {
+			return ElementIcons[elementId];
+		} else {
+			var elementName = $dataSystem.elements[elementId];
+			if (elementName.match(/\i\[(\d+)\]/i)) {
+				return RegExp.$1;
+			}
 		}
 		return 0;
 	};
@@ -1250,7 +1291,7 @@
 
 	Game_Action.prototype.checkEnemyStatus = function(target) {
 		this.makeSuccess(target);
-		if (target.enemy().meta.book !== "no") {
+		if (!(target.enemy().meta.book == "no" && !target.enemy().meta.bookCanCheck)) {
 			var indexWindow = SceneManager._scene._enemyBookIndexWindow;
 			var statusWindow = SceneManager._scene._enemyBookStatusWindow;
 			indexWindow.enemy = target;
