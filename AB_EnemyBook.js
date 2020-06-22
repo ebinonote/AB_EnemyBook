@@ -1,6 +1,6 @@
 ﻿// =============================================================================
 // AB_EnemyBook.js
-// Version: 1.21
+// Version: 1.22
 // -----------------------------------------------------------------------------
 // [Homepage]: ヱビのノート
 //             http://www.zf.em-net.ne.jp/~ebi-games/
@@ -9,7 +9,7 @@
 
 
 /*:
- * @plugindesc v1.21 戦闘中も確認できるモンスター図鑑です。属性、ステートの耐性の確認もできます。
+ * @plugindesc v1.22 戦闘中も確認できるモンスター図鑑です。属性、ステートの耐性の確認もできます。
  * @author ヱビ
  * 
  * @param ShowCommandInBattle
@@ -61,6 +61,15 @@
  * @option OFF
  * @value 0
  * @desc ONにすると、敵の情報をスキルで見た時も、登録されていない敵は「？？？」と表示されます。0:OFF、1:ON
+ * @default 0
+ * 
+ * @param HideItemUntilGet
+ * @type select
+ * @option ON
+ * @value 1
+ * @option OFF
+ * @value 0
+ * @desc アイテムをゲットするまで表示しないようにします。0:OFF、1:ON
  * @default 0
  * 
  * @param ---用語、アイコン---
@@ -423,6 +432,10 @@
  * 1: 戦闘開始時
  * 2: 戦闘終了時
  * 
+ * 〇ゲットしていないアイテムを？？？にする - v1.22
+ * プラグインパラメータHideItemUntilGetをONにすると、ゲットしていないアイテムを
+ * ？？？と表示します。
+ * 
  * ============================================================================
  * プラグインコマンド
  * ============================================================================
@@ -475,6 +488,10 @@
  * 〇v1.20
  * EnemyBook clearDefeatNumber
  *   倒した数をリセットします。
+ * 
+ * 〇v1.22
+ * EnemyBook clearEnemyDrop
+ *   エネミードロップを入手したかどうかをリセットします。
  * 
  * ============================================================================
  * 敵キャラのメモ欄
@@ -530,6 +547,11 @@
  * ============================================================================
  * 更新履歴
  * ============================================================================
+ * 
+ * Version 1.22
+ *   ドロップしていないアイテムを？？？と表示する機能を追加しました。
+ *   ドロップアイテムを入手したかどうかをリセットするプラグインコマンドを追加し
+ *   ました。
  * 
  * Version 1.21
  *   スキルで図鑑に登録するとき、スキルの成功率を参照するようにしました。
@@ -659,7 +681,8 @@
 	var Achievement = String(parameters['Achievement'] || "");
 	var UnknownEnemy = String(parameters['UnknownEnemy'] || "");
 	var UnknownData = String(parameters['UnknownData'] || "");
-	var HideUnknownStatusInSkill = (parameters['HideUnknownStatusInSkill'] == 1) ? true : false;
+	var HideItemUntilGet = (parameters['HideItemUntilGet'] == 1) ? true : false;
+	var ShowCommandInBattle = (parameters['ShowCommandInBattle'] == 1) ? true : false;
 	var AddEnemySkillMessage = String(parameters['AddEnemySkillMessage'] || "");
 	var FailToAddEnemySkillMessage = String(parameters['FailToAddEnemySkillMessage'] || "");
 	var MissToAddEnemySkillMessage = String(parameters['MissToAddEnemySkillMessage'] || "");
@@ -767,6 +790,10 @@
 				break;
 			case 'clearDefeatNumber':
 				$gameSystem.clearDefeatNumber();
+				break;
+			// 1.22
+			case 'clearEnemyDrop':
+				$gameSystem.clearEnemyDropGot();
 				break;
 			}
 		}
@@ -912,7 +939,38 @@
 	Game_System.prototype.getDefeatNumber = function(eId, vId) {
 		var num = this.defeatNumber(eId);
 		$gameVariables.setValue(vId, num);
-	}
+	};
+
+	Game_System.prototype.clearEnemyDropGot = function() {
+		this._enemyDropGot = [];
+	};
+
+	Game_System.prototype.setEnemyDropGot = function(eId, iId, value) {
+		if (!this._enemyDropGot) {
+			this._enemyDropGot = [];
+		}
+		if (!this._enemyDropGot[eId]) {
+			this._enemyDropGot[eId] = [];
+		}
+		this._enemyDropGot[eId][iId] = value;
+	};
+
+	Game_System.prototype.getEnemyDropGot = function(eId, iId) {
+		if (!HideItemUntilGet) return true;
+		if (!this._enemyDropGot) {
+			this._enemyDropGot = [];
+			return false;
+		}
+		if (!this._enemyDropGot[eId]) {
+			return false;
+		}
+		if (!this._enemyDropGot[eId][iId]) {
+			return false;
+		}
+		return true;
+	};
+
+
 //=============================================================================
 // 戦闘開始時に登録
 //=============================================================================
@@ -1635,7 +1693,7 @@ Window_Selectable.prototype.processCancel = function() {
 			for (var i = 0, l = dataEnemy.dropItems.length; i < l; i++) {
 				var di = dataEnemy.dropItems[i];
 				if (di.kind > 0) {
-					if (!isUnknownEnemy) {
+					if (!isUnknownEnemy && $gameSystem.getEnemyDropGot(enemy._enemyId, i)) {
 						var item = enemy.itemObject(di.kind, di.dataId);
 						this.drawItemName(item, x, y, columnWidth);
 					} else {
@@ -1941,5 +1999,35 @@ Window_Selectable.prototype.processCancel = function() {
 		_Game_Enemy_die.call(this);
 		$gameSystem.incrementDefeatNumber(this.enemyId());
 	};
+
+	var _Game_Enemy_prototype_makeDropItems = Game_Enemy.prototype.makeDropItems;
+	Game_Enemy.prototype.makeDropItems = function() {
+		var r = _Game_Enemy_prototype_makeDropItems.call(this);
+		for (var i=0, l=r.length; i<l; i++) {
+			var DI = this.enemy().dropItems;
+			for (var j=0, jl=DI.length; j<jl; j++) {
+				if (r[i].id === DI[j].dataId) {
+					switch (DI[j].kind) {
+					case 1:
+						if (DataManager.isItem(r[i])) {
+							$gameSystem.setEnemyDropGot(this._enemyId, j, true);
+						}
+						break;
+					case 2:
+						if (DataManager.isWeapon(r[i])) {
+							$gameSystem.setEnemyDropGot(this._enemyId, j, true);
+						}
+						break;
+					case 3:
+						if (DataManager.isArmor(r[i])) {
+							$gameSystem.setEnemyDropGot(this._enemyId, j, true);
+						}
+						break;
+					}
+				}
+			}
+		}
+		return r;
+	}
 
 })();
