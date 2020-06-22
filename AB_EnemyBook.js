@@ -1,6 +1,6 @@
 ﻿// =============================================================================
 // AB_EnemyBook.js
-// Version: 1.00
+// Version: 1.01
 // -----------------------------------------------------------------------------
 // [Homepage]: ヱビのノート
 //             http://www.zf.em-net.ne.jp/~ebi-games/
@@ -134,6 +134,11 @@
  * 0:非表示、1:表示
  * @default 1
  * 
+ * @param DispDescribe
+ * @desc 図鑑に敵キャラの説明を表示するか決めます。
+ * 0:非表示、1:表示
+ * @default 1
+ * 
  * @help
  * ============================================================================
  * どんなプラグイン？
@@ -247,6 +252,20 @@
  *     図鑑に表示しないようにできます。
  * 
  * ============================================================================
+ * 更新履歴
+ * ============================================================================
+ * 
+ * Version 1.01
+ *   表示項目によって余白を削り、ウィンドウの高さを小さくするようにしました。
+ *   高さを計算するために、説明を表示するかどうかを設定するプラグインパラメータ
+ *   DispDescribe を追加しました。
+ *   また、対象の情報を見るスキルを使ったとき、敵を選択するウィンドウを
+ *   非表示にするようにしました。
+ * 
+ * Version 1.00
+ *   初版
+ * 
+ * ============================================================================
  * 利用規約
  * ============================================================================
  * 
@@ -293,6 +312,7 @@
 	var UnknownDropItemIcon = Number(parameters['UnknownDropItemIcon']);
 	if (UnknownDropItemIcon === Number.NaN) UnknownDropItemIcon = 0;
 	var ShowCurrentStatus = (parameters['ShowCurrentStatus'] == 1) ? true : false;
+	var DispDescribe = (parameters['DispDescribe'] == 1) ? true : false;
 
 //=============================================================================
 // Game_System
@@ -494,7 +514,7 @@
 
 		var wx = this._enemyBookIndexWindow.width;
 		var ww = Graphics.boxWidth - wx;
-		var wh = Graphics.boxHeight;
+		var wh = Scene_EnemyBook.prototype.calcStatusWindowHeight();
 		this._enemyBookStatusWindow = new Window_EnemyBookStatus(wx, 0, ww, wh);
 
 		this._enemyBookIndexWindow.hide();
@@ -554,13 +574,55 @@
 		this._indexWindow.setHandler('cancel', this.popScene.bind(this));
 		var wx = this._indexWindow.width;
 		var ww = Graphics.boxWidth - wx;
-		var wh = Graphics.boxHeight;
+		//var wh = Graphics.boxHeight;
+		var wh = this.calcStatusWindowHeight();
 		this._statusWindow = new Window_EnemyBookStatus(wx, 0, ww, wh);
 		this.addWindow(this._indexWindow);
 		this.addWindow(this._statusWindow);
 		this._indexWindow.setup();
 		this._indexWindow.setStatusWindow(this._statusWindow);
 	};
+
+	Scene_EnemyBook.prototype.calcStatusWindowHeight = function() {
+		var lineHeight = Window_Base.prototype.lineHeight();
+		var textPadding = Window_Base.prototype.textPadding();
+		var standardPadding = Window_Base.prototype.standardPadding();
+		var paramHeight = Scene_EnemyBook.prototype.calcParameterHeight();
+		//var height = lineHeight * 9 + textPadding * 2 + standardPadding * 2;
+		var height = paramHeight + standardPadding * 2;
+		var linePlus = 0;
+		for (var i = 0; i < 4; i++) {
+			if (dispRates[i]) {
+				linePlus += 0.5;
+			}
+		}
+		linePlus = Math.ceil(linePlus) * 2;
+
+		if (DispDescribe) {
+			linePlus += 2;
+		}
+		height += linePlus * lineHeight + textPadding * Math.ceil(linePlus / 2);
+		return height;
+	};
+
+	Scene_EnemyBook.prototype.calcParameterHeight = function() {
+		var lineHeight = Window_Base.prototype.lineHeight();
+		var textPadding = Window_Base.prototype.textPadding();
+		var standardPadding = Window_Base.prototype.standardPadding();
+		var height = 0;
+		var linePlus = 1;
+		if (DispDropItems) return lineHeight * 9 + textPadding * 2;
+		for (var i = 0; i < 8; i++) {
+			if (dispParameters[i]) {
+				linePlus += 1;
+			}
+		}
+		linePlus = Math.max(linePlus, 6);
+		height = lineHeight * linePlus + textPadding * 2;
+
+		return height;
+	};
+
 
 //=============================================================================
 // Window_EnemyBookIndex
@@ -590,6 +652,18 @@
 		this.show();
 		this.activate();
 		this.open();
+	};
+
+	Window_EnemyBookIndex.prototype.backSetup = function() {
+		this.refresh();
+		if ($gameParty.inBattle()) {
+			this.select(0);
+		} else {
+			this.select(Window_EnemyBookIndex.lastIndex);
+		}
+		this.openness = 255;
+		this.hide();
+		this.activate();
 	};
 
 	Window_EnemyBookIndex.prototype.maxCols = function() {
@@ -689,6 +763,7 @@
 
 	Window_EnemyBookStatus.prototype.initialize = function(x, y, width, height) {
 		Window_Base.prototype.initialize.call(this, x, y, width, height);
+		this._defaultX = x;
 		this._enemy = null;
 		this._enemySprite = new Sprite();
 		this._enemySprite.anchor.x = 0.5;
@@ -701,6 +776,13 @@
 	};
 
 	Window_EnemyBookStatus.prototype.setup = function() {
+		this.x = this._defaultX;
+		this.show();
+		this.open();
+	};
+
+	Window_EnemyBookStatus.prototype.setupWhenCheck = function() {
+		this.x = Math.floor((Graphics.boxWidth - this.width) / 2);
 		this.show();
 		this.open();
 	};
@@ -821,7 +903,7 @@
 		}
 
 		x = 0;
-		y = lineHeight * 9 + this.textPadding() * 2;
+		y = Scene_EnemyBook.prototype.calcParameterHeight();
 		var j = 0;
 
 		for (var i = 0; i < 4; i++) {
@@ -841,22 +923,19 @@
 					break;
 				}
 				j++;
-				if (j >= 2) {
-					y = lineHeight * 11 + this.textPadding() * 3;
-				}
 				if (j % 2 == 1) {
 					x = column2x;
 				} else {
 					x = column1x;
+					y += lineHeight * 2 + this.textPadding();
 				}
 			}
 		}
 		x = 0;
-		y = lineHeight * 13 + this.textPadding() * 4;
 		
-		if (!isUnknownEnemy) {
-			this.drawTextEx(dataEnemy.meta.desc1, x, y + lineHeight * 0, this.contentsWidth());
-			this.drawTextEx(dataEnemy.meta.desc2, x, y + lineHeight * 1, this.contentsWidth());
+		if (!isUnknownEnemy && DispDescribe) {
+			this.drawTextEx(dataEnemy.meta.desc1, x, y + lineHeight * 0);
+			this.drawTextEx(dataEnemy.meta.desc2, x, y + lineHeight * 1);
 		}
 	};
 	Window_EnemyBookStatus.prototype.findElementIcon = function(elementId) {
@@ -996,6 +1075,7 @@
 			this.drawText(UnknownData, x, y);
 		}
 	};
+
 //=============================================================================
 // Game_Action
 //=============================================================================
@@ -1040,8 +1120,8 @@
 			var statusWindow = SceneManager._scene._enemyBookStatusWindow;
 			indexWindow.enemy = target;
 			statusWindow.isCheck = true;
-			indexWindow.setup();
-			statusWindow.setup();
+			indexWindow.backSetup();
+			statusWindow.setupWhenCheck();
 		} else {
 			var message = FailToCheckEnemySkillMessage.replace("%1", target.name());
 			if (message) {
