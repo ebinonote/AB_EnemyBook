@@ -1,6 +1,6 @@
 ﻿// =============================================================================
 // AB_EnemyBook.js
-// Version: 1.15
+// Version: 1.16
 // -----------------------------------------------------------------------------
 // [Homepage]: ヱビのノート
 //             http://www.zf.em-net.ne.jp/~ebi-games/
@@ -8,7 +8,7 @@
 
 
 /*:
- * @plugindesc v1.15 戦闘中も確認できるモンスター図鑑です。属性、ステートの耐性の確認もできます。
+ * @plugindesc v1.16 戦闘中も確認できるモンスター図鑑です。属性、ステートの耐性の確認もできます。
  * @author ヱビ
  * 
  * @param ShowCommandInBattle
@@ -287,6 +287,10 @@
  * EnemyBook getDefeatNumber 3 24
  *   敵キャラ3番を倒した数を変数24に入れます。
  * 
+ * v1.16
+ * EnemyBook openEnemy 16
+ *   ID16の敵キャラの画面を開きます。
+ * 
  * ============================================================================
  * 図鑑に関するスキル
  * ============================================================================
@@ -327,6 +331,9 @@
  * ============================================================================
  * 更新履歴
  * ============================================================================
+ * 
+ * Version 1.16
+ *   プラグインコマンドで、指定したIDの敵キャラの画面を開けるようにしました。
  * 
  * Version 1.15
  *   YEP_X_AnimatedSVEnemiesを入れていないときエラーが発生してプレイが中断され
@@ -507,6 +514,11 @@
 				break;
 			case 'getDefeatNumber':
 				$gameSystem.getDefeatNumber(Number(args[1]), Number(args[2]));
+				break;
+			// v1.16
+			case 'openEnemy':
+				$gameTemp.ABEnemyBookId = Number(args[1]);
+				SceneManager.push(Scene_EnemyBook);
 				break;
 			}
 		}
@@ -811,6 +823,7 @@
 		this.addWindow(this._percentWindow);
 		this.addWindow(this._indexWindow);
 		this.addWindow(this._statusWindow);
+		// Xv1.16 （セットアップって自動で呼ばれたような？）
 		this._indexWindow.setup();
 		this._indexWindow.setStatusWindow(this._statusWindow);
 		this._indexWindow.setPercentWindow(this._percentWindow);
@@ -916,6 +929,19 @@
 		this.refresh();
 		if ($gameParty.inBattle()) {
 			this.select(0);
+		// ver1.16
+		} else if ($gameTemp.ABEnemyBookId){
+			var no = 0;
+			var id = $gameTemp.ABEnemyBookId;
+			$gameTemp.ABEnemyBookId = null;
+			this._list.some(function(enemy, i){
+				if (id === enemy.enemyId()) {
+					no = i;
+					return true;
+				}
+				return false;
+			});
+			this.select(no);
 		} else {
 			this.select(Window_EnemyBookIndex.lastIndex);
 		}
