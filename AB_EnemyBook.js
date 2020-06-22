@@ -1,6 +1,6 @@
 ﻿// =============================================================================
 // AB_EnemyBook.js
-// Version: 1.14
+// Version: 1.15
 // -----------------------------------------------------------------------------
 // [Homepage]: ヱビのノート
 //             http://www.zf.em-net.ne.jp/~ebi-games/
@@ -8,7 +8,7 @@
 
 
 /*:
- * @plugindesc v1.14 戦闘中も確認できるモンスター図鑑です。属性、ステートの耐性の確認もできます。
+ * @plugindesc v1.15 戦闘中も確認できるモンスター図鑑です。属性、ステートの耐性の確認もできます。
  * @author ヱビ
  * 
  * @param ShowCommandInBattle
@@ -327,6 +327,10 @@
  * ============================================================================
  * 更新履歴
  * ============================================================================
+ * 
+ * Version 1.15
+ *   YEP_X_AnimatedSVEnemiesを入れていないときエラーが発生してプレイが中断され
+ *   てしまう不具合を直しました。
  * 
  * Version 1.14
  *   YEP_X_AnimatedSVEnemiesを入れてもアニメーションしていなかった不具合を直し
@@ -1087,9 +1091,10 @@
 		// ver 1.11
 		if (this._enemySprite.bitmap) {
 			var dataEnemy = this._enemy.enemy();
+			// version 1.15
+			var bitmap = this._enemySprite.bitmap;
 			// ver 1.13
 			if (Imported.YEP_X_AnimatedSVEnemies) {
-				var bitmap = this._enemySprite.bitmap;
 				if (this._spriteFrameCountAB % 12 === 0) {
 					if (dataEnemy.sideviewBattler[0]) {
 						var ary = [0,1,2,1];
