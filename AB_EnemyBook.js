@@ -1,6 +1,6 @@
 ﻿// =============================================================================
 // AB_EnemyBook.js
-// Version: 1.05
+// Version: 1.06
 // -----------------------------------------------------------------------------
 // [Homepage]: ヱビのノート
 //             http://www.zf.em-net.ne.jp/~ebi-games/
@@ -8,7 +8,7 @@
 
 
 /*:
- * @plugindesc 戦闘中も確認できるモンスター図鑑です。属性、ステートの耐性の確認もできます。
+ * @plugindesc v1.06 戦闘中も確認できるモンスター図鑑です。属性、ステートの耐性の確認もできます。
  * @author ヱビ
  * 
  * @param ShowCommandInBattle
@@ -269,6 +269,15 @@
  * EnemyBook showGeneralStatus
  *   戦闘中に図鑑を開くと、その敵の一般的な情報を見られるようにします。
  * 
+ * EnemyBook getAchievement per 12
+ *   図鑑の達成率（％）を変数12番に入れます。
+ * EnemyBook getAchievement num 14
+ *   図鑑の登録数を変数14番に入れます。
+ * EnemyBook isRegistered 5 96
+ *   敵キャラ5番が図鑑に登録されているかどうかをスイッチ96番に入れます。
+ * EnemyBook getDefeatNumber 3 24
+ *   敵キャラ3番を倒した数を変数24に入れます。
+ * 
  * ============================================================================
  * 図鑑に関するスキル
  * ============================================================================
@@ -309,6 +318,10 @@
  * ============================================================================
  * 更新履歴
  * ============================================================================
+ * 
+ * Version 1.06
+ *   プラグインコマンドを4種追加しました。図鑑の達成率、登録数、敵キャラが登録さ
+ *   れているかどうか、敵キャラを何体倒したかの4種を取得できます。
  * 
  * Version 1.05
  *   図鑑に敵を倒した数を表示できるようにしました。
@@ -437,6 +450,15 @@
 			case 'showGeneralStatus':
 				$gameSystem.setShowCurrentEnemysStatus(false);
 				break;
+			case 'getAchievement':
+				$gameSystem.getAchievement(args[1], Number(args[2]));
+				break;
+			case 'isRegistered':
+				$gameSystem.isRegistered(Number(args[1]), Number(args[2]));
+				break;
+			case 'getDefeatNumber':
+				$gameSystem.getDefeatNumber(Number(args[1]), Number(args[2]));
+				break;
 			}
 		}
 	};
@@ -526,6 +548,53 @@
 		return this._defeatNumbers[id];
 	};
 
+	Game_System.prototype.getRegisterNumber = function() {
+		var a=0;
+		for (var i=1; i<$dataEnemies.length; i++) {
+			var enemy = $dataEnemies[i];
+			if (enemy.name && enemy.meta.book !== 'no') {
+				if (this.isInEnemyBook(enemy)) a++;
+			}
+		}
+		return a;
+	};
+
+	Game_System.prototype.getRegisterPercent = function() {
+		var a=0;
+		var b=0;
+		for (var i=1; i<$dataEnemies.length; i++) {
+			var enemy = $dataEnemies[i];
+			if (enemy.name && enemy.meta.book !== 'no') {
+				if (this.isInEnemyBook(enemy)) a++;
+				b++;
+			}
+		}
+		return Math.floor(a*100/b);
+	};
+
+	Game_System.prototype.getAchievement = function(type, vId) {
+		if (type == 'per' || type == 'percent') {
+			var num = this.getRegisterPercent();
+			$gameVariables.setValue(vId, num);
+		} else if (type == 'num' || type == 'number') {
+			var num = this.getRegisterNumber();
+			$gameVariables.setValue(vId, num);
+		}
+	};
+
+	Game_System.prototype.isRegistered = function(eId, sId) {
+		var enemy = $dataEnemies[eId];
+		if (this.isInEnemyBook(enemy)) {
+			$gameSwitches.setValue(sId, true);
+		} else {
+			$gameSwitches.setValue(sId, false);
+		}
+	};
+
+	Game_System.prototype.getDefeatNumber = function(eId, vId) {
+		var num = this.defeatNumber(eId);
+		$gameVariables.setValue(vId, num);
+	}
 //=============================================================================
 // 戦闘開始時に登録
 //=============================================================================
@@ -845,13 +914,14 @@
 
 	Window_EnemyBookIndex.prototype.updatePercent = function() {
 		if (this._percentWindow && this._list) {
-			var a = 0;
+			/*var a = 0;
 			for (var i = 1; i < $dataEnemies.length; i++) {
 				var enemy = $dataEnemies[i];
 				if (enemy.name && enemy.meta.book !== 'no') {
 					if ($gameSystem.isInEnemyBook(enemy)) a++;
 				}
-			}
+			}*/
+			var a = $gameSystem.getRegisterNumber();
 			this._percentWindow.setAchievement(this._list.length, a);
 		}
 	}
