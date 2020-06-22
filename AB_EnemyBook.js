@@ -1,6 +1,6 @@
 ﻿// =============================================================================
 // AB_EnemyBook.js
-// Version: 1.23
+// Version: 1.24
 // -----------------------------------------------------------------------------
 // [Homepage]: ヱビのノート
 //             http://www.zf.em-net.ne.jp/~ebi-games/
@@ -9,7 +9,7 @@
 
 
 /*:
- * @plugindesc v1.23 戦闘中も確認できるモンスター図鑑です。属性、ステートの耐性の確認もできます。
+ * @plugindesc v1.24 戦闘中も確認できるモンスター図鑑です。属性、ステートの耐性の確認もできます。
  * @author ヱビ
  * 
  * @param ShowCommandInBattle
@@ -61,6 +61,15 @@
  * @option OFF
  * @value 0
  * @desc ONにすると、敵の情報をスキルで見た時も、登録されていない敵は「？？？」と表示されます。0:OFF、1:ON
+ * @default 0
+ * 
+ * @param ShowGeneralStatusInSkill
+ * @type select
+ * @option ON
+ * @value 1
+ * @option OFF
+ * @value 0
+ * @desc ONにすると、敵の情報をスキルで見た時も、現在ＨＰではなく一般的なデータが表示されます。0:OFF、1:ON
  * @default 0
  * 
  * @param HideItemUntilGet
@@ -383,6 +392,11 @@
  * 表示：チェックした敵の現在のステータス
  * 操作：チェックスキルを敵に対して使用
  * 
+ * ５．チェック（一般データ） - v1.24
+ * 表示：チェックした敵の一般データ
+ * 操作：チェックスキルを敵に対して使用。
+ *       ShowGeneralStatusInSkillがＯＮになっているとき。
+ * 
  * ============================================================================
  * とりあえずの導入方法
  * ============================================================================
@@ -416,12 +430,20 @@
  * 表示されます。「？？？」の部分はプラグインパラメータの UnknownDataで設定
  * できます。 
  * 
- * 〇現在の情報を見る設定
+ * 〇現在の情報を見る設定・敵の情報コマンド
  * 
+ * デフォルトでは敵の情報コマンドでは、一般的な敵のデータが出るようになっていま
+ * す。
  * プラグインパラメータShowCurrentStatus を ON にすると、
- * 戦闘中に図鑑を開いたとき、現在の敵キャラのパラメータが表示されます。
+ * 戦闘中に敵の情報を開いたとき、現在の敵キャラのパラメータが表示されます。
  * 現在HPだけでなく、攻撃力や属性有効度の変化も表示されます。
  * 現在の情報を見る設定は、プラグインコマンドで変更できます。
+ * 
+ * 〇現在の情報を見る設定・チェックスキル - v1.24
+ * 
+ * デフォルトではチェックスキルでは現在の敵のデータが出るようになっています。
+ * プラグインパラメータShowGeneralStatusInSkillをＯＮにすると、スキルでチェック
+ * したときも、一般的な敵のデータを表示するようにできます。
  * 
  * 〇図鑑に登録されるタイミング
  * 
@@ -547,6 +569,13 @@
  * ============================================================================
  * 更新履歴
  * ============================================================================
+ * 
+ * Version 1.24
+ *   HideUnknownStatusInSkillをＯＮにしていても、図鑑に登録されていない敵をスキ
+ *   ルでチェックした時に属性とステートは表示されていましたが、？？？と表示する
+ *   ように修正しました。
+ *   スキルでチェックした時も、現在のパラメータではなく一般的なパラメータを表示
+ *   できるプラグインパラメータShowGeneralStatusInSkillを追加しました。
  * 
  * Version 1.23
  *   未登録のモンスターをチェックしようとするとエラーが発生してしまう不具合を修
@@ -688,6 +717,7 @@
 	var HideUnknownStatusInSkill = (parameters['HideUnknownStatusInSkill'] == 1) ? true : false;
 	var HideItemUntilGet = (parameters['HideItemUntilGet'] == 1) ? true : false;
 	var ShowCommandInBattle = (parameters['ShowCommandInBattle'] == 1) ? true : false;
+	var ShowGeneralStatusInSkill = (parameters['ShowGeneralStatusInSkill'] == 1) ? true : false;
 	var AddEnemySkillMessage = String(parameters['AddEnemySkillMessage'] || "");
 	var FailToAddEnemySkillMessage = String(parameters['FailToAddEnemySkillMessage'] || "");
 	var MissToAddEnemySkillMessage = String(parameters['MissToAddEnemySkillMessage'] || "");
@@ -1270,6 +1300,7 @@
 		//this.refresh();
 		// v1.17
 		this.isAllEnemies = false;
+		this.enemy = null;
 	}
 
 	Window_EnemyBookIndex.prototype.setup = function() {
@@ -1647,7 +1678,7 @@ Window_Selectable.prototype.processCancel = function() {
 		for (var i = 0; i < 8; i++) {
 			if (dispParameters[i]) {
 				// v1.17
-				if (i == 0 && !this.isAllEnemies && ($gameSystem.isShowCurrentEnemysStatus() || this.isCheck)) {
+				if (i == 0 && !this.isAllEnemies && ($gameSystem.isShowCurrentEnemysStatus() || this.isCheck) && !ShowGeneralStatusInSkill) {
 					if (!isUnknownEnemy) {
 						this.drawActorHp(enemy, x, y, 220);
 					}	else {
@@ -1657,7 +1688,7 @@ Window_Selectable.prototype.processCancel = function() {
 						this.drawText(UnknownData, x + w, y, w, 'right');
 					}
 				// v1.17
-				} else if (i == 1 && !this.isAllEnemies && ($gameSystem.isShowCurrentEnemysStatus() || this.isCheck)) {
+				} else if (i == 1 && !this.isAllEnemies && ($gameSystem.isShowCurrentEnemysStatus() || this.isCheck) && !ShowGeneralStatusInSkill) {
 					if (!isUnknownEnemy) {
 						this.drawActorMp(enemy, x, y, 220);
 					}	else {
@@ -1786,7 +1817,7 @@ Window_Selectable.prototype.processCancel = function() {
 			dx = Math.floor(w / icons.length);
 		}
 		y+= this.lineHeight();
-		if ($gameSystem.isInEnemyBook(enemy.enemy()) || this.isCheck) {
+		if ($gameSystem.isInEnemyBook(enemy.enemy()) || (this.isCheck && !HideUnknownStatusInSkill)) {
 			for (var i=0,l=icons.length; i<l; i++) {
 				this.drawIcon(icons[i], x, y);
 				x += dx;
@@ -1819,7 +1850,7 @@ Window_Selectable.prototype.processCancel = function() {
 		}
 		y+= this.lineHeight();
 		
-		if ($gameSystem.isInEnemyBook(enemy.enemy()) || this.isCheck) {
+		if ($gameSystem.isInEnemyBook(enemy.enemy()) || (this.isCheck && !HideUnknownStatusInSkill)) {
 			for (var i=0,l=icons.length; i<l; i++) {
 				this.drawIcon(icons[i], x, y);
 				x += dx;
@@ -1853,7 +1884,7 @@ Window_Selectable.prototype.processCancel = function() {
 		}
 		y+= this.lineHeight();
 		
-		if ($gameSystem.isInEnemyBook(enemy.enemy()) || this.isCheck) {
+		if ($gameSystem.isInEnemyBook(enemy.enemy()) || (this.isCheck && !HideUnknownStatusInSkill)) {
 			for (var i=0,l=icons.length; i<l; i++) {
 				this.drawIcon(icons[i], x, y);
 				x += dx;
@@ -1885,7 +1916,7 @@ Window_Selectable.prototype.processCancel = function() {
 		}
 		y+= this.lineHeight();
 		
-		if ($gameSystem.isInEnemyBook(enemy.enemy()) || this.isCheck) {
+		if ($gameSystem.isInEnemyBook(enemy.enemy()) || (this.isCheck && !HideUnknownStatusInSkill)) {
 			for (var i=0,l=icons.length; i<l; i++) {
 				this.drawIcon(icons[i], x, y);
 				x += dx;
@@ -1918,7 +1949,7 @@ Window_Selectable.prototype.processCancel = function() {
 		}
 		y+= this.lineHeight();
 		
-		if ($gameSystem.isInEnemyBook(enemy.enemy()) || this.isCheck) {
+		if ($gameSystem.isInEnemyBook(enemy.enemy()) || (this.isCheck && !HideUnknownStatusInSkill)) {
 			for (var i=0,l=icons.length; i<l; i++) {
 				this.drawIcon(icons[i], x, y);
 				x += dx;
@@ -1978,7 +2009,12 @@ Window_Selectable.prototype.processCancel = function() {
 		if (!(target.enemy().meta.book == "no" && !target.enemy().meta.bookCanCheck)) {
 			var indexWindow = SceneManager._scene._enemyBookIndexWindow;
 			var statusWindow = SceneManager._scene._enemyBookStatusWindow;
-			indexWindow.enemy = target;
+			if (ShowGeneralStatusInSkill) {
+				var id = target.enemyId();
+				indexWindow.enemy = new Game_Enemy(id, 0, 0);
+			} else {
+				indexWindow.enemy = target;
+			}
 			statusWindow.isCheck = true;
 			// v1.17
 			indexWindow.isAllEnemies = false;
