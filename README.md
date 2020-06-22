@@ -374,7 +374,3 @@ EnemyBook clearEnemyDrop
 ・ツクール素材の改変素材です  
     ツクール公式の利用規約をご覧ください。  
     <https://tkool.jp/support/index.html>
-
-## License
-
-MIT
