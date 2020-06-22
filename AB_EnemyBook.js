@@ -1,6 +1,6 @@
 ﻿// =============================================================================
 // AB_EnemyBook.js
-// Version: 1.20
+// Version: 1.21
 // -----------------------------------------------------------------------------
 // [Homepage]: ヱビのノート
 //             http://www.zf.em-net.ne.jp/~ebi-games/
@@ -9,7 +9,7 @@
 
 
 /*:
- * @plugindesc v1.20 戦闘中も確認できるモンスター図鑑です。属性、ステートの耐性の確認もできます。
+ * @plugindesc v1.21 戦闘中も確認できるモンスター図鑑です。属性、ステートの耐性の確認もできます。
  * @author ヱビ
  * 
  * @param ShowCommandInBattle
@@ -18,7 +18,7 @@
  * @value 1
  * @option 非表示
  * @value 0
- * @desc バトル中に図鑑を見るコマンドを表示するかどうかを決めます。
+ * @desc バトル中に敵の情報コマンドを表示するかどうかを決めます。
  * プラグインコマンドで変更することもできます。0:非表示、1:表示
  * @default 1
  * 
@@ -28,7 +28,7 @@
  * @value 1
  * @option 非表示
  * @value 0
- * @desc バトル中に図鑑を見るコマンドを表示するかどうかを決めます。
+ * @desc バトル中に図鑑コマンドを表示するかどうかを決めます。
  * プラグインコマンドで変更することもできます。0:非表示、1:表示
  * @default 1
  * 
@@ -52,6 +52,15 @@
  * @value 0
  * @desc ONにすると、図鑑で敵の現在の情報（現在HPなど）が見られます。
  * プラグインコマンドで変更することもできます。0:OFF、1:ON
+ * @default 0
+ * 
+ * @param HideUnknownStatusInSkill
+ * @type select
+ * @option ON
+ * @value 1
+ * @option OFF
+ * @value 0
+ * @desc ONにすると、敵の情報をスキルで見た時も、登録されていない敵は「？？？」と表示されます。0:OFF、1:ON
  * @default 0
  * 
  * @param ---用語、アイコン---
@@ -117,6 +126,11 @@
  * @desc スキルで敵キャラを図鑑に登録することに失敗したときの
  * メッセージです。%1が敵キャラの名前に置き換えられます。
  * @default %1は図鑑には載せられない！
+
+ * @param MissToAddEnemySkillMessage
+ * @desc スキルで敵キャラを図鑑に登録することに失敗したときの
+ * メッセージです。%1が敵キャラの名前に置き換えられます。
+ * @default %1を図鑑に登録するのに失敗した！
  * 
  * @param FailToCheckEnemySkillMessage
  * @desc スキルで敵キャラの情報を見ることに失敗したときの
@@ -500,6 +514,9 @@
  *   対象が図鑑に載る敵キャラだった場合図鑑が表示され、
  *   そうでなかった場合失敗メッセージが表示されます。
  *   このスキルでは、対象の現在のパラメータ（現在HPなど）が表示されます。
+ *   〇v1.21
+ *   プラグインパラメータHideUnknownStatusInSkillで「？？？」と表示することも
+ *   できるようになりました。
  * 
  * この2つのスキルのメッセージはプラグインパラメータで設定できます。
  * 
@@ -513,6 +530,11 @@
  * ============================================================================
  * 更新履歴
  * ============================================================================
+ * 
+ * Version 1.21
+ *   スキルで図鑑に登録するとき、スキルの成功率を参照するようにしました。
+ *   スキルで図鑑を見るときも、初めて会った敵は？？？と表示されるように設定でき
+ *   るようにしました。
  * 
  * Version 1.20
  *   倒した数をリセットするプラグインコマンドを追加しました。
@@ -637,8 +659,10 @@
 	var Achievement = String(parameters['Achievement'] || "");
 	var UnknownEnemy = String(parameters['UnknownEnemy'] || "");
 	var UnknownData = String(parameters['UnknownData'] || "");
+	var HideUnknownStatusInSkill = (parameters['HideUnknownStatusInSkill'] == 1) ? true : false;
 	var AddEnemySkillMessage = String(parameters['AddEnemySkillMessage'] || "");
 	var FailToAddEnemySkillMessage = String(parameters['FailToAddEnemySkillMessage'] || "");
+	var MissToAddEnemySkillMessage = String(parameters['MissToAddEnemySkillMessage'] || "");
 	var FailToCheckEnemySkillMessage = String(parameters['FailToCheckEnemySkillMessage'] || "");
 	var DispNo = (parameters['DispNo'] == 1) ? true : false;
 	var DispLv = (parameters['DispLv'] == 1) ? true : false;
@@ -1470,7 +1494,7 @@ Window_Selectable.prototype.processCancel = function() {
 		}
 
 		
-		var isUnknownEnemy = (!$gameSystem.isInEnemyBook(enemy.enemy()) && !this.isCheck);
+		var isUnknownEnemy = (!$gameSystem.isInEnemyBook(enemy.enemy()) && (!this.isCheck || HideUnknownStatusInSkill));
 		var dataEnemy = enemy.enemy();
 
 		var name = enemy.battlerName();
@@ -1863,15 +1887,23 @@ Window_Selectable.prototype.processCancel = function() {
 	};
 
 	Game_Action.prototype.addToEnemyBook = function(target) {
+		var result = target.result();
 		this.makeSuccess(target);
-		if (target.enemy().meta.book !== "no") {
-			$gameSystem.addToEnemyBook(target.enemyId());
-			var message = AddEnemySkillMessage.replace("%1", target.name());
-			if (message) {
-				BattleManager._logWindow.push('addText', message);
+		if (result.isHit()) {
+			if (target.enemy().meta.book !== "no") {
+				$gameSystem.addToEnemyBook(target.enemyId());
+				var message = AddEnemySkillMessage.replace("%1", target.name());
+				if (message) {
+					BattleManager._logWindow.push('addText', message);
+				}
+			} else {
+				var message = FailToAddEnemySkillMessage.replace("%1", target.name());
+				if (message) {
+					BattleManager._logWindow.push('addText', message);
+				}
 			}
 		} else {
-			var message = FailToAddEnemySkillMessage.replace("%1", target.name());
+			var message = MissToAddEnemySkillMessage.replace("%1", target.name());
 			if (message) {
 				BattleManager._logWindow.push('addText', message);
 			}
