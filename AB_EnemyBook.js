@@ -1,6 +1,6 @@
 ﻿// =============================================================================
 // AB_EnemyBook.js
-// Version: 1.24
+// Version: 1.25
 // -----------------------------------------------------------------------------
 // [Homepage]: ヱビのノート
 //             http://www.zf.em-net.ne.jp/~ebi-games/
@@ -9,7 +9,7 @@
 
 
 /*:
- * @plugindesc v1.24 戦闘中も確認できるモンスター図鑑です。属性、ステートの耐性の確認もできます。
+ * @plugindesc v1.25 戦闘中も確認できるモンスター図鑑です。属性、ステートの耐性の確認もできます。
  * @author ヱビ
  * 
  * @param ShowCommandInBattle
@@ -204,6 +204,15 @@
  * @desc 図鑑にMPを表示するか決めます。0:非表示、1:表示
  * @default 1
  * 
+ * @param DispTP
+ * @type select
+ * @option 表示
+ * @value 1
+ * @option 非表示
+ * @value 0
+ * @desc 図鑑にTPを表示するか決めます。0:非表示、1:表示
+ * @default 0
+ * 
  * @param DispATK
  * @type select
  * @option 表示
@@ -257,6 +266,20 @@
  * @value 0
  * @desc 図鑑に運を表示するか決めます。0:非表示、1:表示
  * @default 1
+ * 
+ * @param HitRateName
+ * @type string
+ * @desc 命中率を図鑑になんと表示しますか？
+ * @default 命中率
+ * 
+ * @param DispHitRate
+ * @type select
+ * @option 表示
+ * @value 1
+ * @option 非表示
+ * @value 0
+ * @desc 図鑑に命中率を表示するか決めます。0:非表示、1:表示
+ * @default 0
  * 
  * @param DispDropItems
  * @type select
@@ -570,6 +593,9 @@
  * 更新履歴
  * ============================================================================
  * 
+ * Version 1.25
+ *   TPと命中率を表示できるようにしました。
+ * 
  * Version 1.24
  *   HideUnknownStatusInSkillをＯＮにしていても、図鑑に登録されていない敵をスキ
  *   ルでチェックした時に属性とステートは表示されていましたが、？？？と表示する
@@ -739,6 +765,10 @@
 	dispParameters[5] = (parameters['DispMDF'] == 1) ? true : false;
 	dispParameters[6] = (parameters['DispAGI'] == 1) ? true : false;
 	dispParameters[7] = (parameters['DispLUK'] == 1) ? true : false;
+	var dispTP = (parameters['DispTP'] == 1) ? true : false;
+	var dispHitRate = (parameters['DispHitRate'] == 1) ? true : false;
+	var HitRateName = String(parameters['HitRateName'] || "命中率");
+
 	var DispDropItems = (parameters['DispDropItems'] == 1) ? true : false;
 	var dispRates = [];
 	dispRates[1] = (parameters['DispResistElement'] == 1) ? true : false;
@@ -1676,6 +1706,29 @@ Window_Selectable.prototype.processCancel = function() {
 		if (y != 0) y += this.textPadding();
 
 		for (var i = 0; i < 8; i++) {
+			// v1.25 drawTP
+			if (i == 2 && dispTP && !this.isAllEnemies && ($gameSystem.isShowCurrentEnemysStatus() || this.isCheck) && !ShowGeneralStatusInSkill) {
+				if (!isUnknownEnemy) {
+					this.drawActorTp(enemy, x, y, 220);
+				}	else {
+					this.changeTextColor(this.systemColor());
+					this.drawText(TextManager.tpA, x, y, 60);
+					this.resetTextColor();
+					this.drawText(UnknownData, x + w, y, w, 'right');
+				}
+				y += lineHeight;
+			} else if (i == 2 && dispTP){
+				this.changeTextColor(this.systemColor());
+				this.drawText(TextManager.tpA, x, y, w);
+				this.resetTextColor();
+				if (!isUnknownEnemy) {
+					this.drawText(/*enemy.xparam(0)*/ enemy.tp, x + w, y, w, 'right');
+				} else {
+					this.drawText(UnknownData, x + w, y, w, 'right');
+				}
+				y += lineHeight;
+			
+			}
 			if (dispParameters[i]) {
 				// v1.17
 				if (i == 0 && !this.isAllEnemies && ($gameSystem.isShowCurrentEnemysStatus() || this.isCheck) && !ShowGeneralStatusInSkill) {
@@ -1710,6 +1763,20 @@ Window_Selectable.prototype.processCancel = function() {
 				y += lineHeight;
 			}
 		}
+		if (dispHitRate) {
+			this.changeTextColor(this.systemColor());
+			this.drawText(HitRateName, x, y, w);
+			this.resetTextColor();
+			if (!isUnknownEnemy) {
+				this.drawText((enemy.xparam(0)*100), x + w, y, w, 'right');
+			} else {
+				this.drawText(UnknownData, x + w, y, w, 'right');
+			}
+			y += lineHeight;
+			
+		}
+		var maxY = y;
+	
 /*
 		if (DispDefeatNumber) {
 			this.resetTextColor();
@@ -1742,7 +1809,9 @@ Window_Selectable.prototype.processCancel = function() {
 		}
 
 		x = 0;
-		y = Scene_EnemyBook.prototype.calcParameterHeight();
+		if (maxY > y) y = maxY;
+		y += this.standardPadding();
+		//y = Scene_EnemyBook.prototype.calcParameterHeight();
 		//y = (mY > y) ? mY : y;
 		var j = 0;
 
