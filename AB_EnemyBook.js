@@ -1,6 +1,6 @@
 ﻿// =============================================================================
 // AB_EnemyBook.js
-// Version: 1.25
+// Version: 1.26
 // -----------------------------------------------------------------------------
 // [Homepage]: ヱビのノート
 //             http://www.zf.em-net.ne.jp/~ebi-games/
@@ -9,7 +9,7 @@
 
 
 /*:
- * @plugindesc v1.25 戦闘中も確認できるモンスター図鑑です。属性、ステートの耐性の確認もできます。
+ * @plugindesc v1.26 戦闘中も確認できるモンスター図鑑です。属性、ステートの耐性の確認もできます。
  * @author ヱビ
  * 
  * @param ShowCommandInBattle
@@ -592,6 +592,10 @@
  * ============================================================================
  * 更新履歴
  * ============================================================================
+ * 
+ * Version 1.26
+ *   TPと命中率を表示した時、ウィンドウサイズが反映されない不具合を修正しまし
+ *   た。
  * 
  * Version 1.25
  *   TPと命中率を表示できるようにしました。
@@ -1268,6 +1272,8 @@
 		}
 		if (DispDefeatNumber) linePlus++;
 		if (DispLv) linePlus++;
+		if (dispTP) linePlus++;
+		if (dispHitRate) linePlus++;
 		linePlus = Math.max(linePlus, DispDropItems ? 9 : 6);
 		height = lineHeight * linePlus + textPadding * 2;
 
