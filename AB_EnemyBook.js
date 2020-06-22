@@ -1,6 +1,6 @@
 ﻿// =============================================================================
 // AB_EnemyBook.js
-// Version: 1.10
+// Version: 1.11
 // -----------------------------------------------------------------------------
 // [Homepage]: ヱビのノート
 //             http://www.zf.em-net.ne.jp/~ebi-games/
@@ -8,7 +8,7 @@
 
 
 /*:
- * @plugindesc v1.10 戦闘中も確認できるモンスター図鑑です。属性、ステートの耐性の確認もできます。
+ * @plugindesc v1.11 戦闘中も確認できるモンスター図鑑です。属性、ステートの耐性の確認もできます。
  * @author ヱビ
  * 
  * @param ShowCommandInBattle
@@ -326,6 +326,12 @@
  * ============================================================================
  * 更新履歴
  * ============================================================================
+ * 
+ * Version 1.11
+ *   図鑑を開いたとき、1回目は敵キャラのスプライトが表示されず、2回目にカーソル
+ *   を合わせたときに初めて表示される不具合を修正しました。
+ *   （YEP_X_AnimatedSVEnemiesを使っている場合、SVエネミーを表示するためにこの
+ *   　不具合は修正していません）
  * 
  * Version 1.10
  *   ツクールのデータベースの用語で、HPやMPに「体力」などの日本語を使ったとき、
@@ -1036,6 +1042,7 @@
 		this.addChildToBack(this._enemySprite);
 		this.isCheck = false;
 		this.refresh();
+		this._cw = 0;
 	};
 
 	Window_EnemyBookStatus.prototype.setup = function() {
@@ -1058,9 +1065,11 @@
 	};
 
 // refresh に移動
-/*
+// Version 1.11で復活
+
 	Window_EnemyBookStatus.prototype.update = function() {
 		Window_Base.prototype.update.call(this);
+/*
 		if (this._enemySprite.bitmap) {
 			var bitmapWidth = this._enemySprite.bitmap.width;
 			var contentsWidth = this.contents.width;
@@ -1071,8 +1080,21 @@
 			this._enemySprite.scale.x = scale;
 			this._enemySprite.scale.y = scale;
 		}
+		*/
+		// ver 1.11
+		if (this._enemySprite.bitmap) {
+			//var bitmapWidth = this._enemySprite.bitmap.width;
+			var bitmapWidth = this._cw;
+			var contentsWidth = this.contents.width;
+			var scale = 1;
+			if (bitmapWidth > contentsWidth / 2) {
+				scale = contentsWidth / bitmapWidth / 2;
+			}
+			this._enemySprite.scale.x = scale;
+			this._enemySprite.scale.y = scale;
+		}
 	};
-*/
+
 	Window_EnemyBookStatus.prototype.refresh = function() {
 		var enemy = this._enemy;
 		var column1x = 0;
@@ -1122,8 +1144,14 @@
 				var cx = 0;
 				var cy = 0;
 				this._enemySprite.bitmap = bitmap;
-				this._enemySprite.setFrame(cx * cw, cy * ch, cw, ch);
+				// Ver1.11 たぶんこれが原因で1回目に表示されないので、
+				// YEP_X_AnimatedSVEnemiesを使っていないときは
+				// 処理をしない
+				if (Imported.YEP_X_AnimatedSVEnemies) {
+					this._enemySprite.setFrame(cx * cw, cy * ch, cw, ch);
+				}
 			}
+			
 		} else {
 			bitmap = ImageManager.loadEnemy(name, hue);
 			var cw = bitmap.width;
@@ -1131,21 +1159,13 @@
 			var cx = 0;
 			var cy = 0;
 			this._enemySprite.bitmap = bitmap;
-			this._enemySprite.setFrame(cx * cw, cy * ch, cw, ch);
-		}
-
-
-		if (this._enemySprite.bitmap) {
-			//var bitmapWidth = this._enemySprite.bitmap.width;
-			var bitmapWidth = cw;
-			var contentsWidth = this.contents.width;
-			var scale = 1;
-			if (bitmapWidth > contentsWidth / 2) {
-				scale = contentsWidth / bitmapWidth / 2;
+			if (Imported.YEP_X_AnimatedSVEnemies) {
+				this._enemySprite.setFrame(cx * cw, cy * ch, cw, ch);
 			}
-			this._enemySprite.scale.x = scale;
-			this._enemySprite.scale.y = scale;
 		}
+		// Version 1.11
+		this._cw = cw;
+
 
 		this.resetTextColor();
 		this.drawText(enemy.name(), x, y, columnWidth);
@@ -1274,6 +1294,7 @@
 			this.drawTextEx(dataEnemy.meta.desc2, x, y + lineHeight * 1);
 		}
 	};
+
 	Window_EnemyBookStatus.prototype.findElementIcon = function(elementId) {
 		if (UseElementIconInPluginParameter) {
 			return ElementIcons[elementId];
