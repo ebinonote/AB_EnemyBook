@@ -230,6 +230,10 @@ You can set message of these 2 skills by setting Plugin Parameters.
 
 ## Update Log
 
+### Version 1.35
+  Fixed the bug when plugin parameter "Display Hit Rate" turn on.
+  Fixed the bug that "Display Skills Number" is counted double.
+  Add new parameter "Evade Rate".
 
 ### Version 1.34
   Change to be able to change Enemy Photo Offset Y.
