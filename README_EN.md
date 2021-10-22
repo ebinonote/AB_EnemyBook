@@ -230,6 +230,12 @@ You can set message of these 2 skills by setting Plugin Parameters.
 
 ## Update Log
 
+### Version 1.36
+  Fixed the bug that if you used the plugin command "EnemyBook openEnemy"
+  in Battle Scene, start the Battle from turn 0.
+  Change to be able to use variables  in "openEnemy" command by using
+  "v[id]" argument.
+
 ### Version 1.35
   Fixed the bug when plugin parameter "Display Hit Rate" turn on.
   Fixed the bug that "Display Skills Number" is counted double.

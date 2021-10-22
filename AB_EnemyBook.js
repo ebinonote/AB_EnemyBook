@@ -1,6 +1,6 @@
 ﻿// =============================================================================
 // AB_EnemyBook.js
-// Version: 1.35
+// Version: 1.36
 // -----------------------------------------------------------------------------
 // [Homepage]: ヱビのノート
 //             http://www.zf.em-net.ne.jp/~ebi-games/
@@ -9,7 +9,7 @@
 
 
 /*:
- * @plugindesc v1.35 Displays detailed statuses of enemies.
+ * @plugindesc v1.36 Displays detailed statuses of enemies.
  * Includes element rates, state rates etc.
  * @author ヱビ
  * 
@@ -708,6 +708,12 @@
  * Update Log
  * ============================================================================
  * 
+ * Version 1.36
+ *   Fixed the bug that if you used the plugin command "EnemyBook openEnemy"
+ *   in Battle Scene, start the Battle from turn 0.
+ *   Change to be able to use variables  in "openEnemy" command by using
+ *   "v[id]" argument.
+ * 
  * Version 1.35
  *   Fixed the bug when plugin parameter "Display Hit Rate" turn on.
  *   Fixed the bug that "Display Skills Number" is counted double.
@@ -745,7 +751,7 @@
  */
 
 /*:ja
- * @plugindesc v1.35 戦闘中も確認できるモンスター図鑑です。属性、ステートの耐性の確認もできます。
+ * @plugindesc v1.36 戦闘中も確認できるモンスター図鑑です。属性、ステートの耐性の確認もできます。
  * @author ヱビ
  * 
  * @param ShowCommandInBattle
@@ -1455,6 +1461,12 @@
  * 更新履歴
  * ============================================================================
  * 
+ * Version 1.36
+ *   戦闘中に「EnemyBook openEnemy」で図鑑を開いたときも戦闘用のウィンドウが開
+ *   くようにしました。
+ *   プラグインコマンド「EnemyBook openEnemy」で、
+ *   v[id]の形で、その変数のIDの敵キャラのページを開けるようになりました。
+ * 
  * Version 1.35
  *   「命中率表示」をONにして図鑑を開いたとき、エラーが出て止まる不具合と、
  *   「スキル表示数」が2倍計算されていた不具合を修正しました。
@@ -1767,8 +1779,13 @@
 				break;
 			// v1.16
 			case 'openEnemy':
-				$gameTemp.ABEnemyBookId = Number(args[1]);
-				SceneManager.push(Scene_EnemyBook);
+				var v = $gameVariables._data;
+				$gameTemp.ABEnemyBookId = Number(eval(args[1]));
+				if ($gameParty.inBattle()) {
+					SceneManager._scene.allBattleEnemyBook();
+				} else {
+					SceneManager.push(Scene_EnemyBook);
+				}
 				break;
 			//v1.17
 			case 'showAllInBattle':
@@ -2245,6 +2262,7 @@
 	Window_EnemyBookPercent.prototype.initialize = function(x, y, width, height) {
 		var width = Math.floor(Graphics.boxWidth / 3);
 		var height = this.fittingHeight(1);
+		y = 80;
 		Window_Base.prototype.initialize.call(this, x, y, width, height);
 		this.max = 0;
 		this.achievement = 0;
@@ -2280,6 +2298,7 @@
 	Window_EnemyBookIndex.lastIndex  = 0;
 
 	Window_EnemyBookIndex.prototype.initialize = function(x, y) {
+		y = 80;
 		var width = Math.floor(Graphics.boxWidth / 3);
 		var height = Graphics.boxHeight - y;
 		Window_Selectable.prototype.initialize.call(this, x, y, width, height);
@@ -2482,6 +2501,7 @@ Window_Selectable.prototype.processCancel = function() {
 	Window_EnemyBookStatus.prototype.constructor = Window_EnemyBookStatus;
 
 	Window_EnemyBookStatus.prototype.initialize = function(x, y, width, height) {
+		y = 80;
 		Window_Base.prototype.initialize.call(this, x, y, width, height);
 		this._defaultX = x;
 		this._windowWidth = width;
